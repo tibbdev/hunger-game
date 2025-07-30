@@ -12,23 +12,25 @@
 
 #include <stddef.h>
 
-#define DEFAULT_MAX_HUNGER 100 // Default maximum hunger level if not specified
+#define DEFAULT_MAX_HUNGER 1000.0f // Default maximum hunger level if not specified
 
-void hunger_init(Hunger *hunger, int max_hunger)
+void hunger_init(Hunger *hunger, float max_hunger)
 {
    if(NULL == hunger)
    {
       return; // Handle null pointer
    }
+
    if(max_hunger <= 0)
    {
       max_hunger = DEFAULT_MAX_HUNGER; // Default maximum hunger level if invalid
    }
-   hunger->hunger_level = max_hunger >> 1; // Initialize hunger level to half of max hunger
-   hunger->max_hunger   = max_hunger;      // Set maximum hunger level
+
+   hunger->hunger_level = max_hunger * 0.5f; // Initialize hunger level to half of max hunger
+   hunger->max_hunger   = max_hunger;        // Set maximum hunger level
 }
 
-void hunger_eat(Hunger *hunger, int food_amount)
+void hunger_eat(Hunger *hunger, float food_amount)
 {
    if(NULL == hunger || food_amount < 0)
    {
@@ -41,7 +43,7 @@ void hunger_eat(Hunger *hunger, int food_amount)
    }
 }
 
-bool hunger_is_low(const Hunger *hunger, int threshold)
+bool hunger_below_threshold(const Hunger *hunger, float threshold)
 {
    if(NULL == hunger || threshold < 0)
    {
@@ -54,7 +56,7 @@ bool hunger_is_low(const Hunger *hunger, int threshold)
    return hunger->hunger_level < threshold; // Check if hunger level is below threshold
 }
 
-int hunger_get_level(const Hunger *hunger)
+float hunger_get_level(const Hunger *hunger)
 {
    if(NULL == hunger)
    {
@@ -69,10 +71,10 @@ void hunger_reset(Hunger *hunger)
    {
       return; // Handle null pointer
    }
-   hunger->hunger_level = hunger->max_hunger; // Reset hunger level to maximum
+   hunger->hunger_level = hunger->max_hunger * 0.5f; // Reset hunger level to maximum
 }
 
-void hunger_increase(Hunger *hunger, int amount)
+void hunger_increase(Hunger *hunger, float amount)
 {
    if(NULL == hunger || amount < 0)
    {
@@ -94,7 +96,7 @@ bool hunger_is_full(const Hunger *hunger)
    return hunger->hunger_level >= hunger->max_hunger; // Check if hunger level is at maximum
 }
 
-void hunger_simulate(Hunger *hunger, int time_passed)
+void hunger_simulate(Hunger *hunger, float time_passed)
 {
    if(NULL == hunger || time_passed < 0)
    {
@@ -106,15 +108,4 @@ void hunger_simulate(Hunger *hunger, int time_passed)
    {
       hunger->hunger_level = hunger->max_hunger; // Ensure hunger level does not exceed max
    }
-}
-
-#include <stdio.h>
-void hunger_display(const Hunger *hunger)
-{
-   if(NULL == hunger)
-   {
-      return; // Handle null pointer
-   }
-   // Display current hunger status
-   printf("Current Hunger Level: %d/%d\n", hunger->hunger_level, hunger->max_hunger);
 }
