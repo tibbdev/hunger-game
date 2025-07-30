@@ -18,10 +18,16 @@ option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 
 file(GLOB_RECURSE CORE_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}/src/*.c")
 
+add_subdirectory(vendor/sdl3)
+
 add_executable(${PROJECT_NAME}
     ${CORE_SOURCES}
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}/inc"
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    SDL3::SDL3
 )
