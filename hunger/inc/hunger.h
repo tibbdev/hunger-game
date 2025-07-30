@@ -15,8 +15,8 @@
 
 typedef struct
 {
-    int hunger_level; // Current hunger level
-    int max_hunger;   // Maximum hunger level
+   int hunger_level; // Current hunger level
+   int max_hunger;   // Maximum hunger level
 } Hunger;
 
 // Function to initialize hunger
