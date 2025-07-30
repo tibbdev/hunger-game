@@ -1,7 +1,7 @@
 /**
- * @file main.c
+ * @file 	main.c
  * @author 	tibbdev
- * @brief 	Main file for the Hunger Game simulation
+ * @brief 	Hunger Game - A simple SDL3 application to simulate hunger levels.
  * @version 0.1
  * @date 	2025-07-30
  *

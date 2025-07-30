@@ -1,3 +1,13 @@
+/**
+ * @file    hunger.c
+ * @author  tibbdev
+ * @brief   Hunger management functions for the Hunger Game simulation
+ * @version 0.1
+ * @date    2025-07-30
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
 #include "hunger.h"
 
 #include <stddef.h>
