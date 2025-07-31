@@ -23,7 +23,11 @@ void player_init(Player *player, float max_hunger)
 
    player->x                     = 0.0f;                              // Initialize x-coordinate
    player->y                     = 0.0f;                              // Initialize y-coordinate
-   player->speed                 = 88.0f;                             // Set default movement speed
+   player->speed_x               = 0.0f;                              // Set default movement speed
+   player->speed_y               = 0.0f;                              // Set default movement speed
+   player->accel                 = 120.0f;                            // Set default acceleration
+   player->decel                 = 10 * player->accel;                // Set default deceleration
+   player->max_speed             = 120.0f;                            // Set default maximum speed
    player->size                  = 8.0f;                              // Set default size (width and height)
    player->consumption_rate      = 32.0f;                             // Set default consumption rate
    player->starved_time          = 0.0f;                              // Initialize starved time
@@ -106,12 +110,59 @@ void player_move(Player *player, float dt, float dx, float dy)
 
    if(length > 0.0f)
    {
-      player->x += (dx / length) * player->speed * dt;
-      player->y += (dy / length) * player->speed * dt;
+      if(player->speed_x < player->max_speed)
+      {
+         player->speed_x += player->accel * dt; // Accelerate the player
+      }
+      else if(player->speed_x > player->max_speed)
+      {
+         player->speed_x = player->max_speed; // Cap the speed at maximum
+      }
+
+      if(player->speed_y < player->max_speed)
+      {
+         player->speed_y += player->accel * dt; // Accelerate the player
+      }
+      else if(player->speed_y > player->max_speed)
+      {
+         player->speed_y = player->max_speed; // Cap the speed at maximum
+      }
+
+      player->dx = dx / length;
+      player->dy = dy / length;
+
+      player->x += player->dx * player->speed_x * dt;
+      player->y += player->dy * player->speed_y * dt;
+
       player->state = PLAYER_MOVING;
    }
    else
    {
+      if(player->speed_x > 0.0f)
+      {
+         player->speed_x -= player->decel * dt; // Decelerate the player
+         if(player->speed_x < 0.0f)
+         {
+            player->speed_x = 0.0f; // Ensure speed does not go below zero
+         }
+         else
+         {
+            player->x += player->dx * player->speed_x * dt;
+         }
+      }
+
+      if(player->speed_y > 0.0f)
+      {
+         player->speed_y -= player->decel * dt; // Decelerate the player
+         if(player->speed_y < 0.0f)
+         {
+            player->speed_y = 0.0f; // Ensure speed does not go below zero
+         }
+         else
+         {
+            player->y += player->dy * player->speed_y * dt;
+         }
+      }
       player->state = PLAYER_IDLE;
    }
 }

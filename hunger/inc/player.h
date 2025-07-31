@@ -34,7 +34,13 @@ typedef struct
 {
    float        x;                     // Player's x-coordinate
    float        y;                     // Player's y-coordinate
-   float        speed;                 // Player's movement speed
+   float        dx;                    // Player's x-direction movement (normalised)
+   float        dy;                    // Player's y-direction movement (normalised)
+   float        speed_x;               // Player's movement speed (x-axis)
+   float        speed_y;               // Player's movement speed (y-axis)
+   float        max_speed;             // Players maximum movement speed
+   float        accel;                 // Player's acceleration
+   float        decel;                 // Player's deceleration
    float        size;                  // Player's size (width and height)
    float        consumption_rate;      // Rate at which the player consumes food
    float        starved_time;          // Time when the player started starving

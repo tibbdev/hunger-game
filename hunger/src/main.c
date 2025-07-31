@@ -24,6 +24,7 @@
 
 #define MAX_HUNGER        1000.0f
 #define FOOD_AMOUNT       42
+#define FOOD_QUANTITY_MAX 10
 #define FOOD_SIZE         4
 #define HUNGER_BAR_HEIGHT 200
 
@@ -59,8 +60,12 @@ int main(void)
    player_init(&player, MAX_HUNGER);
    player_move_to(&player, 200, 200);
 
-   Food food;
-   food_spawn(&food, 400, 400, FOOD_SIZE, (rand() % FOOD_AMOUNT) + 1);
+   Food    food[FOOD_QUANTITY_MAX];
+   uint8_t food_count = 0;
+   for(; food_count < FOOD_QUANTITY_MAX; food_count++)
+   {
+      food_spawn(food + food_count, 400, 400, FOOD_SIZE, (rand() % FOOD_AMOUNT) + 1);
+   }
 
    SDL_FRect hunger_rect  = { 10, 10 + ((float)player.hunger.hunger_level / player.hunger.max_hunger) * HUNGER_BAR_HEIGHT, 10, HUNGER_BAR_HEIGHT };
    SDL_Color hunger_color = { 255, 255, 0, 255 }; // YELLOW color for hunger bar
@@ -68,7 +73,6 @@ int main(void)
 
    uint32_t iter      = 0;
    uint32_t frame_cnt = 0;
-   uint32_t fps       = 60;
 
    bool mv_lft = false;
    bool mv_rgt = false;
@@ -184,24 +188,28 @@ int main(void)
 
       if((dx < 0) && (player.x <= 0.5f * player.size))
       {
-         dx       = 0;
-         player.x = 0.5f * player.size;
+         dx             = 0;
+         player.speed_x = 0;
+         player.x       = 0.5f * player.size;
       }
       else if((dx > 0) && (player.x >= 400 - (0.5f * player.size)))
       {
-         dx       = 0;
-         player.x = 400 - (0.5f * player.size);
+         dx             = 0;
+         player.speed_x = 0;
+         player.x       = 400 - (0.5f * player.size);
       }
 
       if((dy < 0) && (player.y <= 0.5f * player.size))
       {
-         dy       = 0;
-         player.y = 0.5f * player.size;
+         dy             = 0;
+         player.speed_y = 0;
+         player.y       = 0.5f * player.size;
       }
       else if((dy > 0) && (player.y >= 400 - (0.5f * player.size)))
       {
-         dy       = 0;
-         player.y = 400 - (0.5f * player.size);
+         dy             = 0;
+         player.speed_y = 0;
+         player.y       = 400 - (0.5f * player.size);
       }
 
       // Update player state
@@ -214,28 +222,28 @@ int main(void)
 
       if(player.state == PLAYER_DEAD)
       {
-         // If the player is dead, set the hunger bar to BLACK
-         hunger_color = (SDL_Color) { 0, 0, 0, 255 }; // BLACK for dead state
+         // If the player is dead, set the hunger bar to Super Dark Red
+         hunger_color = (SDL_Color) { 69, 7, 9, 255 }; // Super Dark Red for dead state
       }
       else if(player.hunger_state == PLAYER_HUNGER_STARVED)
       {
          // If the player is starved, set the hunger bar to dark red
-         hunger_color = (SDL_Color) { 165, 0, 0, 255 }; // Dark color for starved state
+         hunger_color = (SDL_Color) { 159, 7, 18, 255 }; // Dark color for starved state
       }
       else if(player.hunger_state == PLAYER_HUNGER_STARVING)
       {
          // If the player is starving, set the hunger bar to red
-         hunger_color = (SDL_Color) { 255, 0, 0, 255 }; // Red color for hungry state
+         hunger_color = (SDL_Color) { 251, 33, 21, 255 }; // Red color for hungry state
       }
       else if(player.hunger_state == PLAYER_HUNGER_HUNGRY)
       {
          // If the player is hungry, set the hunger bar to orange
-         hunger_color = (SDL_Color) { 255, 165, 0, 255 }; // Orange color for hungry state
+         hunger_color = (SDL_Color) { 254, 154, 55, 255 }; // Orange color for hungry state
       }
       else
       {
          // If the player is okay, set the hunger bar to green
-         hunger_color = (SDL_Color) { 0, 255, 0, 255 }; // Green color for okay state
+         hunger_color = (SDL_Color) { 187, 244, 81, 255 }; // Green color for okay state
       }
 
       // Render the window
@@ -246,13 +254,18 @@ int main(void)
 
       // Check for collision between player and food
       CollisionRect player_collision_box = { player.x - 0.5f * player.size, player.y - 0.5f * player.size, player.size, player.size };
-      CollisionRect food_collision_box   = { food.x - 0.5f * food.size, food.y - 0.5f * food.size, food.size, food.size };
-      if(collision_aabb(&player_collision_box, &food_collision_box))
+
+      // Iterate through all food items and check for collisions
+      for(uint8_t i = 0; i < food_count; i++)
       {
-         // Handle player-food collision
-         hunger_eat(&player.hunger, food.nutrient);
-         // Respawn food at a new location
-         food_spawn(&food, 400, 400, FOOD_SIZE, (rand() % FOOD_AMOUNT) + 1);
+         CollisionRect food_collision_box = { food[i].x - 0.5f * food[i].size, food[i].y - 0.5f * food[i].size, food[i].size, food[i].size };
+         if(collision_aabb(&player_collision_box, &food_collision_box))
+         {
+            // Handle player-food collision
+            hunger_eat(&player.hunger, food[i].nutrient);
+            // Respawn food at a new location
+            food_spawn(&food[i], 400, 400, FOOD_SIZE, (rand() % FOOD_AMOUNT) + 1);
+         }
       }
 
       SDL_SetRenderDrawColor(renderer, 0, 55, 55, 255);
@@ -275,12 +288,16 @@ int main(void)
       SDL_RenderRect(renderer, &wrld_rect);
 
       // Draw the food item
-      SDL_FRect food_rect;
-      food_rect.h = food.size;
-      food_rect.w = food.size;
-      food_rect.x = wrld_rect.x + food.x - (food.size * 0.5f);
-      food_rect.y = wrld_rect.y + food.y - (food.size * 0.5f);
-      SDL_RenderFillRect(renderer, &food_rect);
+      for(uint8_t i = 0; i < food_count; i++)
+      {
+         SDL_SetRenderDrawColor(renderer, 240, 128, 128, 255); // Salmon color for food
+         SDL_FRect food_rect;
+         food_rect.h = food[i].size;
+         food_rect.w = food[i].size;
+         food_rect.x = wrld_rect.x + food[i].x - (food[i].size * 0.5f);
+         food_rect.y = wrld_rect.y + food[i].y - (food[i].size * 0.5f);
+         SDL_RenderFillRect(renderer, &food_rect);
+      }
 
       SDL_RenderPresent(renderer);
 
@@ -291,7 +308,6 @@ int main(void)
 
          // Update the window title with the current frame count
          SDL_SetWindowTitle(window, window_fps_title);
-         fps       = frame_cnt;
          frame_cnt = 0;
       }
 
