@@ -47,14 +47,56 @@ void draw_hunger_bar(SDL_Renderer *renderer, SDL_FRect *hunger_rect, SDL_Color h
 }
 void draw_player(SDL_Renderer *renderer, Player *player, SDL_FRect *wrld_rect)
 {
+   SDL_Color plyr_clr = { 255, 255, 0, 255 }; // Default color for hunger bar (yellow)
+   if(player->state == PLAYER_DEAD)
+   {
+      // If the player is dead, set the hunger bar to Super Dark Red
+      plyr_clr = (SDL_Color) { 69, 7, 9, 255 }; // Super Dark Red for dead state
+   }
+   else if(player->hunger_state == PLAYER_HUNGER_STARVED)
+   {
+      // If the player is starved, set the hunger bar to dark red
+      plyr_clr = (SDL_Color) { 159, 7, 18, 255 }; // Dark color for starved state
+   }
+   else if(player->hunger_state == PLAYER_HUNGER_STARVING)
+   {
+      // If the player is starving, set the hunger bar to red
+      plyr_clr = (SDL_Color) { 251, 33, 21, 255 }; // Red color for hungry state
+   }
+   else if(player->hunger_state == PLAYER_HUNGER_HUNGRY)
+   {
+      // If the player is hungry, set the hunger bar to orange
+      plyr_clr = (SDL_Color) { 254, 154, 55, 255 }; // Orange color for hungry state
+   }
+   else
+   {
+      // If the player is okay, set the hunger bar to green
+      plyr_clr = (SDL_Color) { 187, 244, 81, 255 }; // Green color for okay state
+   }
+
    SDL_FRect plyr_rect;
    plyr_rect.h = player->size;
    plyr_rect.w = player->size;
    plyr_rect.x = wrld_rect->x + player->x - (player->size * 0.5f);
    plyr_rect.y = wrld_rect->y + player->y - (player->size * 0.5f);
 
-   SDL_SetRenderDrawColor(renderer, 187, 244, 81, 255); // Green color for player
+   float player_hunger_bar_y  = wrld_rect->y + player->y - (player->size * 0.5f) - 4.0f; // Position the hunger bar above the player
+   float player_hunger_bar_x0 = wrld_rect->x + player->x - (player->size * 0.5f) - 2.0f; // Center the hunger bar above the player
+
+   float player_hunger_bar_x1 = wrld_rect->x + (player->x + (player->size * 0.5f) + 2.0f) * (float)player->hunger.hunger_level / player->hunger.max_hunger; // Center the hunger bar above the player
+
+   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Black color for hunger bar outline
+   SDL_RenderLine(renderer, player_hunger_bar_x0, player_hunger_bar_y, player_hunger_bar_x0 + player->size + 4, player_hunger_bar_y);
+   SDL_RenderLine(renderer, player_hunger_bar_x0, player_hunger_bar_y + 1, player_hunger_bar_x0 + player->size + 4, player_hunger_bar_y + 1);
+
+   SDL_SetRenderDrawColor(renderer, plyr_clr.r, plyr_clr.g, plyr_clr.b, plyr_clr.a);
+   SDL_RenderLine(renderer, player_hunger_bar_x0, player_hunger_bar_y, player_hunger_bar_x1, player_hunger_bar_y);
+   SDL_RenderLine(renderer, player_hunger_bar_x0, player_hunger_bar_y + 1, player_hunger_bar_x1, player_hunger_bar_y + 1);
+
    SDL_RenderFillRect(renderer, &plyr_rect);
+
+   SDL_SetRenderDrawColor(renderer, 94, 233, 181, 255);
+   SDL_RenderRect(renderer, &plyr_rect);
 }
 void draw_food(SDL_Renderer *renderer, Food *food, uint8_t food_count, SDL_FRect *wrld_rect)
 {
@@ -271,34 +313,8 @@ int main(void)
       hunger_rect.y = (WINDOW_HEIGHT - 10) - ((float)player.hunger.hunger_level / player.hunger.max_hunger) * HUNGER_BAR_HEIGHT;
       hunger_rect.h = ((float)player.hunger.hunger_level / player.hunger.max_hunger) * HUNGER_BAR_HEIGHT;
 
-      if(player.state == PLAYER_DEAD)
-      {
-         // If the player is dead, set the hunger bar to Super Dark Red
-         hunger_color = (SDL_Color) { 69, 7, 9, 255 }; // Super Dark Red for dead state
-      }
-      else if(player.hunger_state == PLAYER_HUNGER_STARVED)
-      {
-         // If the player is starved, set the hunger bar to dark red
-         hunger_color = (SDL_Color) { 159, 7, 18, 255 }; // Dark color for starved state
-      }
-      else if(player.hunger_state == PLAYER_HUNGER_STARVING)
-      {
-         // If the player is starving, set the hunger bar to red
-         hunger_color = (SDL_Color) { 251, 33, 21, 255 }; // Red color for hungry state
-      }
-      else if(player.hunger_state == PLAYER_HUNGER_HUNGRY)
-      {
-         // If the player is hungry, set the hunger bar to orange
-         hunger_color = (SDL_Color) { 254, 154, 55, 255 }; // Orange color for hungry state
-      }
-      else
-      {
-         // If the player is okay, set the hunger bar to green
-         hunger_color = (SDL_Color) { 187, 244, 81, 255 }; // Green color for okay state
-      }
-
       // Render the window
-      SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Clear with black
+      SDL_SetRenderDrawColor(renderer, 44, 10, 88, 255); // Clear dark color
       SDL_RenderClear(renderer);
 
       SDL_FRect wrld_rect = { (WINDOW_WIDTH >> 1) - (WORLD_WIDTH >> 1), (WINDOW_HEIGHT >> 1) - (WORLD_HEIGHT >> 1), WORLD_WIDTH, WORLD_HEIGHT };
@@ -322,33 +338,10 @@ int main(void)
       SDL_SetRenderDrawColor(renderer, 0, 55, 55, 255);
       SDL_RenderFillRect(renderer, &wrld_rect);
 
-      SDL_FRect plyr_rect;
-      plyr_rect.h = player.size;
-      plyr_rect.w = player.size;
-      plyr_rect.x = wrld_rect.x + player.x - (player.size * 0.5f);
-      plyr_rect.y = wrld_rect.y + player.y - (player.size * 0.5f);
-
-      // Draw the hunger bar
-      SDL_SetRenderDrawColor(renderer, hunger_color.r, hunger_color.g, hunger_color.b, hunger_color.a);
-      SDL_RenderFillRect(renderer, &hunger_rect);
-      SDL_RenderFillRect(renderer, &plyr_rect);
-
-      // Draw the hunger bar outline
-      SDL_SetRenderDrawColor(renderer, 255, 255, 255, 200);
-      SDL_RenderRect(renderer, &hunger_rect);
-      SDL_RenderRect(renderer, &wrld_rect);
-
-      // Draw the food item
-      for(uint8_t i = 0; i < food_count; i++)
-      {
-         SDL_SetRenderDrawColor(renderer, 240, 128, 128, 255); // Salmon color for food
-         SDL_FRect food_rect;
-         food_rect.h = food[i].size;
-         food_rect.w = food[i].size;
-         food_rect.x = wrld_rect.x + food[i].x - (food[i].size * 0.5f);
-         food_rect.y = wrld_rect.y + food[i].y - (food[i].size * 0.5f);
-         SDL_RenderFillRect(renderer, &food_rect);
-      }
+      // draw_hunger_bar(renderer, &hunger_rect, hunger_color);
+      draw_world(renderer, &wrld_rect);
+      draw_food(renderer, food, food_count, &wrld_rect);
+      draw_player(renderer, &player, &wrld_rect);
 
       SDL_RenderPresent(renderer);
 
