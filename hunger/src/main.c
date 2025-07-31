@@ -28,23 +28,74 @@
 #define FOOD_SIZE         4
 #define HUNGER_BAR_HEIGHT 200
 
-#define WINDOW_WIDTH  640
-#define WINDOW_HEIGHT 480
+#define WINDOW_WIDTH  960
+#define WINDOW_HEIGHT 540
+
+#define WORLD_WIDTH  500
+#define WORLD_HEIGHT 500
 
 SDL_Window   *window       = NULL;
 SDL_Renderer *renderer     = NULL;
 const char   *window_title = "Hunger Game";
 
+void draw_hunger_bar(SDL_Renderer *renderer, SDL_FRect *hunger_rect, SDL_Color hunger_color)
+{
+   SDL_SetRenderDrawColor(renderer, hunger_color.r, hunger_color.g, hunger_color.b, hunger_color.a);
+   SDL_RenderFillRect(renderer, hunger_rect);
+   SDL_SetRenderDrawColor(renderer, 255, 255, 255, 200); // White color for outline
+   SDL_RenderRect(renderer, hunger_rect);
+}
+void draw_player(SDL_Renderer *renderer, Player *player, SDL_FRect *wrld_rect)
+{
+   SDL_FRect plyr_rect;
+   plyr_rect.h = player->size;
+   plyr_rect.w = player->size;
+   plyr_rect.x = wrld_rect->x + player->x - (player->size * 0.5f);
+   plyr_rect.y = wrld_rect->y + player->y - (player->size * 0.5f);
+
+   SDL_SetRenderDrawColor(renderer, 187, 244, 81, 255); // Green color for player
+   SDL_RenderFillRect(renderer, &plyr_rect);
+}
+void draw_food(SDL_Renderer *renderer, Food *food, uint8_t food_count, SDL_FRect *wrld_rect)
+{
+   for(uint8_t i = 0; i < food_count; i++)
+   {
+      SDL_SetRenderDrawColor(renderer, 240, 128, 128, 255); // Salmon color for food
+      SDL_FRect food_rect;
+      food_rect.h = food[i].size;
+      food_rect.w = food[i].size;
+      food_rect.x = wrld_rect->x + food[i].x - (food[i].size * 0.5f);
+      food_rect.y = wrld_rect->y + food[i].y - (food[i].size * 0.5f);
+      SDL_RenderFillRect(renderer, &food_rect);
+   }
+}
+void draw_world(SDL_Renderer *renderer, SDL_FRect *wrld_rect)
+{
+   SDL_SetRenderDrawColor(renderer, 3, 79, 59, 255); // Dark color for world
+   SDL_RenderFillRect(renderer, wrld_rect);
+   SDL_SetRenderDrawColor(renderer, 240, 253, 244, 255); // Dark color for world
+   SDL_RenderRect(renderer, wrld_rect);
+}
+
 int main(void)
 {
    SDL_Init(SDL_INIT_VIDEO);
-   SDL_CreateWindowAndRenderer(window_title, WINDOW_WIDTH, WINDOW_HEIGHT, 0, &window, &renderer);
+   SDL_CreateWindowAndRenderer(window_title, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_FULLSCREEN, &window, &renderer);
 
    if(window == NULL || renderer == NULL)
    {
       fprintf(stderr, "Failed to create window or renderer: %s\n", SDL_GetError());
       return 1;
    }
+
+   int window_width  = WINDOW_WIDTH;
+   int window_height = WINDOW_HEIGHT;
+   SDL_GetWindowSize(window, &window_width, &window_height);
+
+   float scale_x = (float)window_width / (float)WINDOW_WIDTH;
+   float scale_y = (float)window_height / (float)WINDOW_HEIGHT;
+
+   SDL_SetRenderScale(renderer, scale_x, scale_y);
 
    SDL_SetRenderVSync(renderer, true);
 
@@ -64,7 +115,7 @@ int main(void)
    uint8_t food_count = 0;
    for(; food_count < FOOD_QUANTITY_MAX; food_count++)
    {
-      food_spawn(food + food_count, 400, 400, FOOD_SIZE, (rand() % FOOD_AMOUNT) + 1);
+      food_spawn(food + food_count, WORLD_WIDTH, WORLD_HEIGHT, FOOD_SIZE, (rand() % FOOD_AMOUNT) + 1);
    }
 
    SDL_FRect hunger_rect  = { 10, 10 + ((float)player.hunger.hunger_level / player.hunger.max_hunger) * HUNGER_BAR_HEIGHT, 10, HUNGER_BAR_HEIGHT };
@@ -190,26 +241,26 @@ int main(void)
       {
          dx             = 0;
          player.speed_x = 0;
-         player.x       = 0.5f * player.size;
+         player.x       = 1 + 0.5f * player.size;
       }
-      else if((dx > 0) && (player.x >= 400 - (0.5f * player.size)))
+      else if((dx > 0) && (player.x >= WORLD_WIDTH - (0.5f * player.size)))
       {
          dx             = 0;
          player.speed_x = 0;
-         player.x       = 400 - (0.5f * player.size);
+         player.x       = WORLD_WIDTH - (0.5f * player.size) - 1;
       }
 
       if((dy < 0) && (player.y <= 0.5f * player.size))
       {
          dy             = 0;
          player.speed_y = 0;
-         player.y       = 0.5f * player.size;
+         player.y       = 1 + 0.5f * player.size;
       }
-      else if((dy > 0) && (player.y >= 400 - (0.5f * player.size)))
+      else if((dy > 0) && (player.y >= WORLD_HEIGHT - (0.5f * player.size)))
       {
          dy             = 0;
          player.speed_y = 0;
-         player.y       = 400 - (0.5f * player.size);
+         player.y       = WORLD_HEIGHT - (0.5f * player.size) - 1;
       }
 
       // Update player state
@@ -250,7 +301,7 @@ int main(void)
       SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Clear with black
       SDL_RenderClear(renderer);
 
-      SDL_FRect wrld_rect = { 120, 40, 400, 400 };
+      SDL_FRect wrld_rect = { (WINDOW_WIDTH >> 1) - (WORLD_WIDTH >> 1), (WINDOW_HEIGHT >> 1) - (WORLD_HEIGHT >> 1), WORLD_WIDTH, WORLD_HEIGHT };
 
       // Check for collision between player and food
       CollisionRect player_collision_box = { player.x - 0.5f * player.size, player.y - 0.5f * player.size, player.size, player.size };
@@ -264,7 +315,7 @@ int main(void)
             // Handle player-food collision
             hunger_eat(&player.hunger, food[i].nutrient);
             // Respawn food at a new location
-            food_spawn(&food[i], 400, 400, FOOD_SIZE, (rand() % FOOD_AMOUNT) + 1);
+            food_spawn(&food[i], WORLD_WIDTH - (FOOD_SIZE << 1), WORLD_HEIGHT - (FOOD_SIZE << 1), FOOD_SIZE, (rand() % FOOD_AMOUNT) + 1);
          }
       }
 
