@@ -69,7 +69,16 @@ void player_update(Player *player, float delta_time);
  * @param dx
  * @param dy
  */
-void player_move(Player *player, float dx, float dy);
+void player_move(Player *player, float dt, float dx, float dy);
+
+/**
+ * @brief Moves the player to a specified location.
+ *
+ * @param player  Pointer to the Player structure to move.
+ * @param x
+ * @param y
+ */
+void player_move_to(Player *player, float x, float y);
 
 /**
  * @brief Displays the player's current state.

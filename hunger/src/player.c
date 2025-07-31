@@ -23,8 +23,8 @@ void player_init(Player *player, float max_hunger)
 
    player->x                     = 0.0f;                              // Initialize x-coordinate
    player->y                     = 0.0f;                              // Initialize y-coordinate
-   player->speed                 = 1.0f;                              // Set default movement speed
-   player->size                  = 50.0f;                             // Set default size (width and height)
+   player->speed                 = 66.0f;                             // Set default movement speed
+   player->size                  = 8.0f;                              // Set default size (width and height)
    player->consumption_rate      = 32.0f;                             // Set default consumption rate
    player->starved_time          = 0.0f;                              // Initialize starved time
    player->state                 = PLAYER_IDLE;                       // Set initial state to idle
@@ -77,11 +77,15 @@ void player_update(Player *player, float delta_time)
       else if(player->starved_time > 0.0f)
       {
          player->starved_time -= delta_time;
+         if(player->starved_time < 0.0f)
+         {
+            player->starved_time = 0.0f;
+         }
       }
    }
 }
 
-void player_move(Player *player, float dx, float dy)
+void player_move(Player *player, float dt, float dx, float dy)
 {
    if(player == NULL)
    {
@@ -102,9 +106,25 @@ void player_move(Player *player, float dx, float dy)
 
    if(length > 0.0f)
    {
-      player->x += (dx / length) * player->speed;
-      player->y += (dy / length) * player->speed;
+      player->x += (dx / length) * player->speed * dt;
+      player->y += (dy / length) * player->speed * dt;
+      player->state = PLAYER_MOVING;
    }
+   else
+   {
+      player->state = PLAYER_IDLE;
+   }
+}
+
+void player_move_to(Player *player, float x, float y)
+{
+   if(player == NULL)
+   {
+      return; // Handle null pointer case
+   }
+
+   player->x = x;
+   player->y = y;
 }
 
 #include <stdio.h>
