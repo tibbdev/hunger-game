@@ -23,7 +23,7 @@ void player_init(Player *player, float max_hunger)
 
    player->x                     = 0.0f;                              // Initialize x-coordinate
    player->y                     = 0.0f;                              // Initialize y-coordinate
-   player->speed                 = 66.0f;                             // Set default movement speed
+   player->speed                 = 88.0f;                             // Set default movement speed
    player->size                  = 8.0f;                              // Set default size (width and height)
    player->consumption_rate      = 32.0f;                             // Set default consumption rate
    player->starved_time          = 0.0f;                              // Initialize starved time

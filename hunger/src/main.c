@@ -15,12 +15,16 @@
 #include <string.h>
 
 #include "SDL3/SDL.h"
+#include "SDL3/SDL_joystick.h"
 
 #include "hunger.h"
 #include "player.h"
+#include "food.h"
+#include "collisions.h"
 
 #define MAX_HUNGER        1000.0f
 #define FOOD_AMOUNT       42
+#define FOOD_SIZE         4
 #define HUNGER_BAR_HEIGHT 200
 
 #define WINDOW_WIDTH  640
@@ -55,6 +59,9 @@ int main(void)
    player_init(&player, MAX_HUNGER);
    player_move_to(&player, 200, 200);
 
+   Food food;
+   food_spawn(&food, 400, 400, FOOD_SIZE, (rand() % FOOD_AMOUNT) + 1);
+
    SDL_FRect hunger_rect  = { 10, 10 + ((float)player.hunger.hunger_level / player.hunger.max_hunger) * HUNGER_BAR_HEIGHT, 10, HUNGER_BAR_HEIGHT };
    SDL_Color hunger_color = { 255, 255, 0, 255 }; // YELLOW color for hunger bar
    SDL_Color full_color   = { 255, 0, 0, 255 };   // Red color for full hunger
@@ -69,7 +76,8 @@ int main(void)
    bool mv_dn  = false;
 
    SDL_GetCurrentTime(&current_time);
-   SDL_Time prev_time = current_time;
+   SDL_Time prev_time    = current_time;
+   float    elapsed_time = 0.0;
 
    while(running)
    {
@@ -82,6 +90,7 @@ int main(void)
       dt = current_time - prev_time;
       dt *= 0.000000001;
 
+      elapsed_time += dt;
       frame_cnt++;
 
       // Handle events
@@ -97,10 +106,6 @@ int main(void)
             {
                case SDLK_ESCAPE:
                   running = false;
-                  break;
-               case SDLK_SPACE:
-                  // Eat food when space is pressed
-                  hunger_eat(&player.hunger, (rand() % FOOD_AMOUNT) + 1);
                   break;
 
                case SDLK_W:
@@ -233,13 +238,22 @@ int main(void)
          hunger_color = (SDL_Color) { 0, 255, 0, 255 }; // Green color for okay state
       }
 
-      player_display(&player); // Display player state in console
-
       // Render the window
       SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Clear with black
       SDL_RenderClear(renderer);
 
       SDL_FRect wrld_rect = { 120, 40, 400, 400 };
+
+      // Check for collision between player and food
+      CollisionRect player_collision_box = { player.x - 0.5f * player.size, player.y - 0.5f * player.size, player.size, player.size };
+      CollisionRect food_collision_box   = { food.x - 0.5f * food.size, food.y - 0.5f * food.size, food.size, food.size };
+      if(collision_aabb(&player_collision_box, &food_collision_box))
+      {
+         // Handle player-food collision
+         hunger_eat(&player.hunger, food.nutrient);
+         // Respawn food at a new location
+         food_spawn(&food, 400, 400, FOOD_SIZE, (rand() % FOOD_AMOUNT) + 1);
+      }
 
       SDL_SetRenderDrawColor(renderer, 0, 55, 55, 255);
       SDL_RenderFillRect(renderer, &wrld_rect);
@@ -259,6 +273,15 @@ int main(void)
       SDL_SetRenderDrawColor(renderer, 255, 255, 255, 200);
       SDL_RenderRect(renderer, &hunger_rect);
       SDL_RenderRect(renderer, &wrld_rect);
+
+      // Draw the food item
+      SDL_FRect food_rect;
+      food_rect.h = food.size;
+      food_rect.w = food.size;
+      food_rect.x = wrld_rect.x + food.x - (food.size * 0.5f);
+      food_rect.y = wrld_rect.y + food.y - (food.size * 0.5f);
+      SDL_RenderFillRect(renderer, &food_rect);
+
       SDL_RenderPresent(renderer);
 
       if(current_time / 1000000000 != prev_time / 1000000000)
