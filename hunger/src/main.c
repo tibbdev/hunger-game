@@ -90,8 +90,8 @@ void draw_player(SDL_Renderer *renderer, Player *player, SDL_FRect *wrld_rect)
    SDL_RenderLine(renderer, player_hunger_bar_x0, player_hunger_bar_y + 1, player_hunger_bar_x0 + player->size + 4, player_hunger_bar_y + 1);
 
    SDL_SetRenderDrawColor(renderer, plyr_clr.r, plyr_clr.g, plyr_clr.b, plyr_clr.a);
-   SDL_RenderLine(renderer, player_hunger_bar_x0, player_hunger_bar_y, player_hunger_bar_x1, player_hunger_bar_y);
-   SDL_RenderLine(renderer, player_hunger_bar_x0, player_hunger_bar_y + 1, player_hunger_bar_x1, player_hunger_bar_y + 1);
+   // SDL_RenderLine(renderer, player_hunger_bar_x0, player_hunger_bar_y, player_hunger_bar_x1, player_hunger_bar_y);
+   // SDL_RenderLine(renderer, player_hunger_bar_x0, player_hunger_bar_y + 1, player_hunger_bar_x1, player_hunger_bar_y + 1);
 
    SDL_RenderFillRect(renderer, &plyr_rect);
 
