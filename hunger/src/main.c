@@ -22,10 +22,12 @@
 #include "food.h"
 #include "collisions.h"
 
+#define FOOD_QUANTITY_MAX               16
+#define FOOD_QUANTITY_MIN               1
+#define FOOD_QUANTITY_REDUCER           2
+#define FOOD_QUANTITY_REDUCE_AFTER_secs 15.0f
+
 #define MAX_HUNGER        1000.0f
-#define FOOD_AMOUNT       42
-#define FOOD_QUANTITY_MAX 10
-#define FOOD_SIZE         4
 #define HUNGER_BAR_HEIGHT 200
 
 #define WINDOW_WIDTH  960
@@ -80,26 +82,36 @@ void draw_player(SDL_Renderer *renderer, Player *player, SDL_FRect *wrld_rect)
    plyr_rect.x = wrld_rect->x + player->x - (player->size * 0.5f);
    plyr_rect.y = wrld_rect->y + player->y - (player->size * 0.5f);
 
-   float player_hunger_bar_y  = wrld_rect->y + player->y - (player->size * 0.5f) - 4.0f; // Position the hunger bar above the player
-   float player_hunger_bar_x0 = wrld_rect->x + player->x - (player->size * 0.5f) - 2.0f; // Center the hunger bar above the player
+   float player_hunger_bar_y   = wrld_rect->y + player->y - (player->size * 0.5f) - 3.0f;                                                 // Position the hunger bar above the player
+   float player_hunger_bar_x0  = wrld_rect->x + player->x - (player->size * 0.5f) - 2.0f;                                                 // Center the hunger bar above the player
+   float player_hunger_bar_x1  = wrld_rect->x + (player->x + (player->size * 0.5f) + 1.0f);                                               // Center the hunger bar above the player
+   float player_hunger_bar_len = (player_hunger_bar_x1 - player_hunger_bar_x0) * player->hunger.hunger_level / player->hunger.max_hunger; // Calculate the length of the hunger bar based on the player's hunger level
 
-   float player_hunger_bar_x1 = wrld_rect->x + (player->x + (player->size * 0.5f) + 2.0f) * (float)player->hunger.hunger_level / player->hunger.max_hunger; // Center the hunger bar above the player
+   float player_hunger_bar_x2 = player_hunger_bar_x0 + player_hunger_bar_len; // Center the hunger bar above the player
 
-   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Black color for hunger bar outline
-   SDL_RenderLine(renderer, player_hunger_bar_x0, player_hunger_bar_y, player_hunger_bar_x0 + player->size + 4, player_hunger_bar_y);
-   SDL_RenderLine(renderer, player_hunger_bar_x0, player_hunger_bar_y + 1, player_hunger_bar_x0 + player->size + 4, player_hunger_bar_y + 1);
+   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Black color for hunger bar background
+   SDL_RenderLine(renderer, player_hunger_bar_x0, player_hunger_bar_y, player_hunger_bar_x1, player_hunger_bar_y);
 
    SDL_SetRenderDrawColor(renderer, plyr_clr.r, plyr_clr.g, plyr_clr.b, plyr_clr.a);
-   // SDL_RenderLine(renderer, player_hunger_bar_x0, player_hunger_bar_y, player_hunger_bar_x1, player_hunger_bar_y);
-   // SDL_RenderLine(renderer, player_hunger_bar_x0, player_hunger_bar_y + 1, player_hunger_bar_x1, player_hunger_bar_y + 1);
+   SDL_RenderLine(renderer, player_hunger_bar_x0, player_hunger_bar_y, player_hunger_bar_x2, player_hunger_bar_y);
 
    SDL_RenderFillRect(renderer, &plyr_rect);
 
-   SDL_SetRenderDrawColor(renderer, 94, 233, 181, 255);
+   SDL_SetRenderDrawColor(renderer, plyr_clr.r * 0.75f, plyr_clr.g * 0.75f, plyr_clr.b * 0.75f, plyr_clr.a);
    SDL_RenderRect(renderer, &plyr_rect);
 }
 void draw_food(SDL_Renderer *renderer, Food *food, uint8_t food_count, SDL_FRect *wrld_rect)
 {
+   if(food == NULL || food_count == 0)
+   {
+      return; // No food to draw
+   }
+
+   if(wrld_rect == NULL)
+   {
+      return; // No world rectangle to draw food in
+   }
+
    for(uint8_t i = 0; i < food_count; i++)
    {
       SDL_SetRenderDrawColor(renderer, 240, 128, 128, 255); // Salmon color for food
@@ -129,6 +141,7 @@ int main(void)
       fprintf(stderr, "Failed to create window or renderer: %s\n", SDL_GetError());
       return 1;
    }
+   SDL_SetRenderVSync(renderer, true);
 
    int window_width  = WINDOW_WIDTH;
    int window_height = WINDOW_HEIGHT;
@@ -139,25 +152,19 @@ int main(void)
 
    SDL_SetRenderScale(renderer, scale_x, scale_y);
 
-   SDL_SetRenderVSync(renderer, true);
-
    bool      running = true;
    SDL_Event event;
-
-   SDL_Time current_time;
+   SDL_Time  current_time;
    SDL_GetCurrentTime(&current_time);
-
    srand(current_time % 3600);
-
    Player player;
    player_init(&player, MAX_HUNGER);
    player_move_to(&player, 200, 200);
-
    Food    food[FOOD_QUANTITY_MAX];
    uint8_t food_count = 0;
    for(; food_count < FOOD_QUANTITY_MAX; food_count++)
    {
-      food_spawn(food + food_count, WORLD_WIDTH, WORLD_HEIGHT, FOOD_SIZE, (rand() % FOOD_AMOUNT) + 1);
+      food_spawn(food + food_count, WORLD_WIDTH, WORLD_HEIGHT, FOOD_SIZE, (rand() % FOOD_AMOUNT) + FOOD_MIN);
    }
 
    SDL_FRect hunger_rect  = { 10, 10 + ((float)player.hunger.hunger_level / player.hunger.max_hunger) * HUNGER_BAR_HEIGHT, 10, HUNGER_BAR_HEIGHT };
@@ -188,6 +195,19 @@ int main(void)
       dt *= 0.000000001;
 
       elapsed_time += dt;
+      if(elapsed_time >= FOOD_QUANTITY_REDUCE_AFTER_secs)
+      {
+         elapsed_time = 0.0f;
+         if(food_count > FOOD_QUANTITY_MIN)
+         {
+            food_count -= FOOD_QUANTITY_REDUCER;
+            if(food_count < FOOD_QUANTITY_MIN)
+            {
+               food_count = FOOD_QUANTITY_MIN;
+            }
+         }
+      }
+
       frame_cnt++;
 
       // Handle events
@@ -314,7 +334,8 @@ int main(void)
       hunger_rect.h = ((float)player.hunger.hunger_level / player.hunger.max_hunger) * HUNGER_BAR_HEIGHT;
 
       // Render the window
-      SDL_SetRenderDrawColor(renderer, 44, 10, 88, 255); // Clear dark color
+      float reduction_time_ratio = elapsed_time / FOOD_QUANTITY_REDUCE_AFTER_secs;
+      SDL_SetRenderDrawColor(renderer, 44, 10, reduction_time_ratio * 88, 255); // Clear dark color
       SDL_RenderClear(renderer);
 
       SDL_FRect wrld_rect = { (WINDOW_WIDTH >> 1) - (WORLD_WIDTH >> 1), (WINDOW_HEIGHT >> 1) - (WORLD_HEIGHT >> 1), WORLD_WIDTH, WORLD_HEIGHT };
@@ -331,7 +352,7 @@ int main(void)
             // Handle player-food collision
             hunger_eat(&player.hunger, food[i].nutrient);
             // Respawn food at a new location
-            food_spawn(&food[i], WORLD_WIDTH - (FOOD_SIZE << 1), WORLD_HEIGHT - (FOOD_SIZE << 1), FOOD_SIZE, (rand() % FOOD_AMOUNT) + 1);
+            food_spawn(&food[i], WORLD_WIDTH - (FOOD_SIZE << 1), WORLD_HEIGHT - (FOOD_SIZE << 1), FOOD_SIZE, (rand() % FOOD_AMOUNT) + FOOD_MIN);
          }
       }
 

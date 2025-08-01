@@ -29,7 +29,7 @@ void player_init(Player *player, float max_hunger)
    player->decel                 = 10 * player->accel;                // Set default deceleration
    player->max_speed             = 120.0f;                            // Set default maximum speed
    player->size                  = 8.0f;                              // Set default size (width and height)
-   player->consumption_rate      = 32.0f;                             // Set default consumption rate
+   player->consumption_rate      = 24.0f;                             // Set default consumption rate
    player->starved_time          = 0.0f;                              // Initialize starved time
    player->state                 = PLAYER_IDLE;                       // Set initial state to idle
    player->hunger_state          = PLAYER_HUNGER_OK;                  // Set initial hunger state to okay

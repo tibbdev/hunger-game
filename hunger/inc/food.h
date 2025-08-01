@@ -13,6 +13,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define FOOD_AMOUNT 37
+#define FOOD_MIN    5
+#define FOOD_SIZE   4
+
 typedef struct
 {
    float    x;        // X coordinate of the food

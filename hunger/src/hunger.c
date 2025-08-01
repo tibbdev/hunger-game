@@ -26,7 +26,7 @@ void hunger_init(Hunger *hunger, float max_hunger)
       max_hunger = DEFAULT_MAX_HUNGER; // Default maximum hunger level if invalid
    }
 
-   hunger->hunger_level = max_hunger * 0.5f; // Initialize hunger level to half of max hunger
+   hunger->hunger_level = max_hunger * 0.2f; // Initialize hunger level to 20% of max hunger
    hunger->max_hunger   = max_hunger;        // Set maximum hunger level
 }
 
