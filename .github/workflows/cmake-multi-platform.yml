@@ -4,7 +4,7 @@ name: CMake on multiple platforms
 
 on:
   push:
-    branches: [ "trunk" , "devevlop"]
+    branches: [ "trunk" , "develop"]
   pull_request:
     branches: [ "trunk" ]
 
@@ -45,7 +45,10 @@ jobs:
             c_compiler: cl
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code & submodules
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.

@@ -1,0 +1,52 @@
+{
+    "folders": [
+        {
+            "path": ".",
+            "name": "Hunger Game",
+        },
+    ],
+    "settings": {
+        // ** VSCode Configuration **
+        "files.associations": {
+            "*.h": "c", // C Header Files
+            "*.c": "c" // C Source Files
+        },
+        "editor.tabSize": 3,
+        "editor.insertSpaces": true,
+        "editor.formatOnSave": true,
+        "clang-format.executable": "C:/Program Files/LLVM/bin/clang-format.exe",
+        "git.autofetch": true,
+        // ** VSCode Extension Configuration **
+        // * jkiviluoto.tws
+        "tws.highlightTrailingWhiteSpace": true,
+        "tws.trimOnSave": false,
+        // * Microsoft's CMake
+        "cmake.configureOnOpen": true,
+        "cmake.ignoreCMakeListsMissing": false,
+        // * Microsoft's C++
+        "C_Cpp.codeAnalysis.clangTidy.enabled": true,
+        "C_Cpp.codeAnalysis.runAutomatically": true,
+        "C_Cpp.codeAnalysis.clangTidy.path": "C:/Program Files/LLVM/bin/clang-tidy",
+        // * Peacock Colour Profile
+        "workbench.colorCustomizations": {
+            "activityBar.activeBackground": "#fae606",
+            "activityBar.background": "#fae606",
+            "activityBar.foreground": "#15202b",
+            "activityBar.inactiveForeground": "#15202b99",
+            "activityBarBadge.background": "#039c90",
+            "activityBarBadge.foreground": "#e7e7e7",
+            "commandCenter.border": "#15202b99",
+            "sash.hoverBorder": "#fae606",
+            "statusBar.background": "#c9b904",
+            "statusBar.foreground": "#15202b",
+            "statusBarItem.hoverBackground": "#978b03",
+            "statusBarItem.remoteBackground": "#c9b904",
+            "statusBarItem.remoteForeground": "#15202b",
+            "titleBar.activeBackground": "#c9b904",
+            "titleBar.activeForeground": "#15202b",
+            "titleBar.inactiveBackground": "#c9b90499",
+            "titleBar.inactiveForeground": "#15202b99"
+        },
+        "peacock.color": "#c9b904",
+    }
+}
