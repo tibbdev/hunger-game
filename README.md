@@ -16,6 +16,10 @@ Try and keep yourself fed or you will die of hunger!
 
 > git submodule update --init --recursive
 
+I use VS Code and the CMake extension, builds on windows 10/11 with VS Build Tools 2022.
+
+Have not tested building/running on Linux.
+
 ## Things for future me to do
 
 - Have hunger bar above player
