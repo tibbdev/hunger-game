@@ -141,16 +141,30 @@ int main(void)
       fprintf(stderr, "Failed to create window or renderer: %s\n", SDL_GetError());
       return 1;
    }
+
    SDL_SetRenderVSync(renderer, true);
+   SDL_SetWindowFullscreen(window, true);
 
-   int window_width  = WINDOW_WIDTH;
-   int window_height = WINDOW_HEIGHT;
-   SDL_GetWindowSize(window, &window_width, &window_height);
+   int display_count = 0;
+   SDL_GetDisplays(&display_count);
 
-   float scale_x = (float)window_width / (float)WINDOW_WIDTH;
-   float scale_y = (float)window_height / (float)WINDOW_HEIGHT;
+   if(1 == display_count)
+   {
+      const SDL_DisplayMode * displayMode = SDL_GetDesktopDisplayMode(display_count);
 
-   SDL_SetRenderScale(renderer, scale_x, scale_y);
+      if(NULL != displayMode) 
+      {
+         printf("DisplayMode :: w=%d, h=%d\r\n", displayMode->w, displayMode->h);
+
+
+         float scale_x = (float)displayMode->w / (float)WINDOW_WIDTH;
+         float scale_y = (float)displayMode->h / (float)WINDOW_HEIGHT;
+
+         printf("Window Scale := %f (x), %f (y)\r\n", scale_x, scale_y);
+
+         SDL_SetRenderScale(renderer, scale_x, scale_y);
+      }
+   }
 
    bool      running = true;
    SDL_Event event;
