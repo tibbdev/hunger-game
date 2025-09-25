@@ -11,6 +11,7 @@
 #include "player.h"
 
 #include <math.h>
+#include <stddef.h>
 
 void player_init(Player *player, float max_hunger)
 {
