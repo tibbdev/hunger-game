@@ -1,0 +1,10 @@
+/**
+ * Hunger Game Menu Header File
+ */
+#pragma once
+
+#include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
+
+void hunger_menu_init(SDL_Window *window, SDL_Renderer *renderer);
+void hunger_menu_tick(SDL_Window *window, SDL_Renderer *renderer);

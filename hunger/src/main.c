@@ -15,7 +15,7 @@
 #include <string.h>
 
 #include "SDL3/SDL.h"
-#include "SDL3/SDL_joystick.h"
+#include "SDL3/SDL_gamepad.h"
 
 #include "hunger.h"
 #include "player.h"
@@ -36,9 +36,18 @@
 #define WORLD_WIDTH  500
 #define WORLD_HEIGHT 500
 
+typedef enum
+{
+   HUNGER_STATE_Menu,
+   HUNGER_STATE_Playing,
+   HUNGER_STATE_GameOver
+} Hunger_State_e;
+
 SDL_Window   *window       = NULL;
 SDL_Renderer *renderer     = NULL;
 const char   *window_title = "Hunger Game";
+
+Hunger_State_e GameState = HUNGER_STATE_Menu;
 
 void draw_hunger_bar(SDL_Renderer *renderer, SDL_FRect *hunger_rect, SDL_Color hunger_color)
 {
@@ -133,7 +142,7 @@ void draw_world(SDL_Renderer *renderer, SDL_FRect *wrld_rect)
 
 int main(void)
 {
-   SDL_Init(SDL_INIT_VIDEO);
+   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
    SDL_CreateWindowAndRenderer(window_title, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_FULLSCREEN, &window, &renderer);
 
    if(window == NULL || renderer == NULL)

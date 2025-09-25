@@ -35,4 +35,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3
+    SDL3_ttf::SDL3_ttf
+    SDL3_image::SDL3_image
+    SDL3_mixer::SDL3_mixer
 )
