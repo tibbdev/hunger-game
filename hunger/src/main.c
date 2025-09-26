@@ -16,11 +16,13 @@
 
 #include "SDL3/SDL.h"
 #include "SDL3/SDL_gamepad.h"
+#include "SDL3_ttf/SDL_ttf.h"
 
 #include "hunger.h"
 #include "player.h"
 #include "food.h"
 #include "collisions.h"
+#include "menu.h"
 
 #define FOOD_QUANTITY_MAX               16
 #define FOOD_QUANTITY_MIN               1
@@ -151,6 +153,9 @@ int main(void)
       return 1;
    }
 
+   TTF_Init();
+   hunger_menu_init(window, renderer);
+
    SDL_SetRenderVSync(renderer, true);
    SDL_SetWindowFullscreen(window, true);
 
@@ -159,17 +164,12 @@ int main(void)
 
    if(1 == display_count)
    {
-      const SDL_DisplayMode * displayMode = SDL_GetDesktopDisplayMode(display_count);
+      const SDL_DisplayMode *displayMode = SDL_GetDesktopDisplayMode(display_count);
 
-      if(NULL != displayMode) 
+      if(NULL != displayMode)
       {
-         printf("DisplayMode :: w=%d, h=%d\r\n", displayMode->w, displayMode->h);
-
-
          float scale_x = (float)displayMode->w / (float)WINDOW_WIDTH;
          float scale_y = (float)displayMode->h / (float)WINDOW_HEIGHT;
-
-         printf("Window Scale := %f (x), %f (y)\r\n", scale_x, scale_y);
 
          SDL_SetRenderScale(renderer, scale_x, scale_y);
       }
