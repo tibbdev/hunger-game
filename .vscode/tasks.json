@@ -17,7 +17,12 @@
       {
          "label": "Run Hunger Game",
          "type": "shell",
-         "command": "${workspaceFolder}/build/Debug/hunger.exe",
+         "windows": {
+            "command": "${workspaceFolder}/build/Debug/hunger.exe",
+         },
+         "linux": {
+            "command": "cp -r assets ${workspaceFolder}/build/;${workspaceFolder}/build/hunger",
+         },
          "group": {
             "kind": "test",
             "isDefault": true
