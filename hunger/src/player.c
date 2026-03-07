@@ -25,7 +25,7 @@ void player_init(Player *player, float max_hunger)
    player->y                     = 0.0f;                              // Initialize y-coordinate
    player->speed_x               = 0.0f;                              // Set default movement speed
    player->speed_y               = 0.0f;                              // Set default movement speed
-   player->accel                 = 120.0f;                            // Set default acceleration
+   player->accel                 = 240.0f;                            // Set default acceleration
    player->decel                 = 10 * player->accel;                // Set default deceleration
    player->max_speed             = 120.0f;                            // Set default maximum speed
    player->size                  = 8.0f;                              // Set default size (width and height)
@@ -37,6 +37,7 @@ void player_init(Player *player, float max_hunger)
    player->starving_threshold    = player->hunger.max_hunger * 0.9f;  // Set threshold for starving state
    player->starve_time_threshold = 10.0f;                             // Set threshold for starvation time
    player->starved_time          = 0.0f;                              // Initialize starved time
+   player->eaten_count           = 0;                                 // Nothing eaten yet
 }
 
 void player_update(Player *player, float delta_time)
@@ -87,6 +88,16 @@ void player_update(Player *player, float delta_time)
          }
       }
    }
+}
+
+void player_eat(Player *player, float nutrition)
+{
+   if(player == NULL)
+   {
+      return; // Handle null pointer case
+   }
+   player->eaten_count++;
+   hunger_eat(&player->hunger, nutrition);
 }
 
 void player_move(Player *player, float dt, float dx, float dy)

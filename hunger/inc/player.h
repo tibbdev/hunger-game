@@ -34,8 +34,8 @@ typedef struct
 {
    float        x;                     // Player's x-coordinate
    float        y;                     // Player's y-coordinate
-   float        dx;                    // Player's x-direction movement (normalised)
-   float        dy;                    // Player's y-direction movement (normalised)
+   float        dx;                    // Player's x-direction movement
+   float        dy;                    // Player's y-direction movement
    float        speed_x;               // Player's movement speed (x-axis)
    float        speed_y;               // Player's movement speed (y-axis)
    float        max_speed;             // Players maximum movement speed
@@ -49,6 +49,7 @@ typedef struct
    float        hungry_threshold;      // Threshold for hunger state change
    float        starving_threshold;    // Threshold for starving state change
    float        starve_time_threshold; // Threshold for starvation time
+   uint16_t     eaten_count;           // Total number of things eaten over time
 
    Hunger hunger; // Hunger structure to track hunger levels
 } Player;
@@ -67,6 +68,14 @@ void player_init(Player *player, float max_hunger);
  * @param delta_time Time since the last update in seconds.
  */
 void player_update(Player *player, float delta_time);
+
+/**
+ * @brief Updates the player's position based on input.
+ *
+ * @param player Pointer to the Player structure to update.
+ * @param nutrition Amount of nutrition gained from the food
+ */
+void player_eat(Player *player, float nutrition);
 
 /**
  * @brief Moves the player by a specified amount in the x and y directions.
