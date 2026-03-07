@@ -19,6 +19,7 @@ typedef struct
    float y;
    float w;
    float h;
-} CollisionRect;
+} collision_rect_t;
 
-bool collision_aabb(CollisionRect *const A, CollisionRect *const B);
+bool collision_aabb_centered(collision_rect_t *const A, collision_rect_t *const B);
+bool collision_aabb(collision_rect_t *const A, collision_rect_t *const B);

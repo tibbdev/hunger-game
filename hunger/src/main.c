@@ -368,13 +368,13 @@ int main(void)
       SDL_RenderClear(renderer);
 
       // Check for collision between player and food
-      CollisionRect player_collision_box = { player.x - 0.5f * player.size, player.y - 0.5f * player.size, player.size, player.size };
+      collision_rect_t player_collision_box = { player.x - 0.5f * player.size, player.y - 0.5f * player.size, player.size, player.size };
 
       // Iterate through all food items and check for collisions
       for(uint8_t i = 0; i < food_count; i++)
       {
-         CollisionRect food_collision_box = { food[i].x - 0.5f * food[i].size, food[i].y - 0.5f * food[i].size, food[i].size, food[i].size };
-         if(collision_aabb(&player_collision_box, &food_collision_box))
+         collision_rect_t food_collision_box = { food[i].x - 0.5f * food[i].size, food[i].y - 0.5f * food[i].size, food[i].size, food[i].size };
+         if(collision_aabb_centered(&player_collision_box, &food_collision_box))
          {
             // Handle player-food collision
             hunger_eat(&player.hunger, food[i].nutrient);
