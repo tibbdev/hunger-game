@@ -40,6 +40,8 @@ SDL_Window   *window       = NULL;
 SDL_Renderer *renderer     = NULL;
 const char   *window_title = "Hunger Game";
 
+SDL_FRect wrld_rect = { (WINDOW_WIDTH >> 1) - (WORLD_WIDTH >> 1), (WINDOW_HEIGHT >> 1) - (WORLD_HEIGHT >> 1), WORLD_WIDTH, WORLD_HEIGHT };
+
 void draw_hunger_bar(SDL_Renderer *renderer, SDL_FRect *hunger_rect, SDL_Color hunger_color)
 {
    SDL_SetRenderDrawColor(renderer, hunger_color.r, hunger_color.g, hunger_color.b, hunger_color.a);
@@ -47,6 +49,23 @@ void draw_hunger_bar(SDL_Renderer *renderer, SDL_FRect *hunger_rect, SDL_Color h
    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 200); // White color for outline
    SDL_RenderRect(renderer, hunger_rect);
 }
+
+void draw_vertical_bar(SDL_Renderer *renderer, SDL_FRect *reducer_bar_rect, SDL_Color reducer_bar_color, float progress)
+{
+   // draw black background
+   SDL_SetRenderDrawColor(renderer, 0, 0, 0, UINT8_MAX);
+   SDL_RenderFillRect(renderer, reducer_bar_rect);
+
+   // fill the bar
+   SDL_FRect bar_rect = { .h = reducer_bar_rect->h * progress, .w = reducer_bar_rect->w, .x = reducer_bar_rect->x, .y = reducer_bar_rect->y + (reducer_bar_rect->h * (1 - progress)) };
+   SDL_SetRenderDrawColor(renderer, reducer_bar_color.r, reducer_bar_color.g, reducer_bar_color.b, reducer_bar_color.a);
+   SDL_RenderFillRect(renderer, &bar_rect);
+
+   // draw the outline
+   SDL_SetRenderDrawColor(renderer, 255, 255, 255, 200); // White color for outline
+   SDL_RenderRect(renderer, reducer_bar_rect);
+}
+
 void draw_player(SDL_Renderer *renderer, Player *player, SDL_FRect *wrld_rect)
 {
    SDL_Color plyr_clr = { 255, 255, 0, 255 }; // Default color for hunger bar (yellow)
@@ -100,6 +119,7 @@ void draw_player(SDL_Renderer *renderer, Player *player, SDL_FRect *wrld_rect)
    SDL_SetRenderDrawColor(renderer, plyr_clr.r * 0.75f, plyr_clr.g * 0.75f, plyr_clr.b * 0.75f, plyr_clr.a);
    SDL_RenderRect(renderer, &plyr_rect);
 }
+
 void draw_food(SDL_Renderer *renderer, Food *food, uint8_t food_count, SDL_FRect *wrld_rect)
 {
    if(food == NULL || food_count == 0)
@@ -123,6 +143,7 @@ void draw_food(SDL_Renderer *renderer, Food *food, uint8_t food_count, SDL_FRect
       SDL_RenderFillRect(renderer, &food_rect);
    }
 }
+
 void draw_world(SDL_Renderer *renderer, SDL_FRect *wrld_rect)
 {
    SDL_SetRenderDrawColor(renderer, 3, 79, 59, 255); // Dark color for world
@@ -133,7 +154,8 @@ void draw_world(SDL_Renderer *renderer, SDL_FRect *wrld_rect)
 
 int main(void)
 {
-   SDL_Init(SDL_INIT_VIDEO);
+   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
+
    SDL_CreateWindowAndRenderer(window_title, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_FULLSCREEN, &window, &renderer);
 
    if(window == NULL || renderer == NULL)
@@ -141,6 +163,7 @@ int main(void)
       fprintf(stderr, "Failed to create window or renderer: %s\n", SDL_GetError());
       return 1;
    }
+
    SDL_SetRenderVSync(renderer, true);
 
    int window_width  = WINDOW_WIDTH;
@@ -155,17 +178,24 @@ int main(void)
    bool      running = true;
    SDL_Event event;
    SDL_Time  current_time;
+
    SDL_GetCurrentTime(&current_time);
    srand(current_time % 3600);
+
    Player player;
    player_init(&player, MAX_HUNGER);
    player_move_to(&player, 200, 200);
+
    Food    food[FOOD_QUANTITY_MAX];
    uint8_t food_count = 0;
-   for(; food_count < FOOD_QUANTITY_MAX; food_count++)
+   while(food_count < FOOD_QUANTITY_MAX)
    {
       food_spawn(food + food_count, WORLD_WIDTH, WORLD_HEIGHT, FOOD_SIZE, (rand() % FOOD_AMOUNT) + FOOD_MIN);
+      food_count++;
    }
+
+   SDL_FRect reducer_bar_rect  = { .x = 32, .y = 32, .w = 32, .h = WINDOW_HEIGHT - 64 };
+   SDL_Color reducer_bar_color = { 32, 255, 16, 255 };
 
    SDL_FRect hunger_rect  = { 10, 10 + ((float)player.hunger.hunger_level / player.hunger.max_hunger) * HUNGER_BAR_HEIGHT, 10, HUNGER_BAR_HEIGHT };
    SDL_Color hunger_color = { 255, 255, 0, 255 }; // YELLOW color for hunger bar
@@ -334,11 +364,8 @@ int main(void)
       hunger_rect.h = ((float)player.hunger.hunger_level / player.hunger.max_hunger) * HUNGER_BAR_HEIGHT;
 
       // Render the window
-      float reduction_time_ratio = elapsed_time / FOOD_QUANTITY_REDUCE_AFTER_secs;
-      SDL_SetRenderDrawColor(renderer, 44, 10, reduction_time_ratio * 88, 255); // Clear dark color
+      SDL_SetRenderDrawColor(renderer, 44, 10, 8, 255); // Clear dark color
       SDL_RenderClear(renderer);
-
-      SDL_FRect wrld_rect = { (WINDOW_WIDTH >> 1) - (WORLD_WIDTH >> 1), (WINDOW_HEIGHT >> 1) - (WORLD_HEIGHT >> 1), WORLD_WIDTH, WORLD_HEIGHT };
 
       // Check for collision between player and food
       CollisionRect player_collision_box = { player.x - 0.5f * player.size, player.y - 0.5f * player.size, player.size, player.size };
@@ -356,6 +383,26 @@ int main(void)
          }
       }
 
+      float reduction_time_ratio = elapsed_time / FOOD_QUANTITY_REDUCE_AFTER_secs;
+      if(0.9f < reduction_time_ratio) // red
+      {
+         reducer_bar_color.r = 248;
+         reducer_bar_color.g = 8;
+         reducer_bar_color.b = 0;
+      }
+      else if(0.7f < reduction_time_ratio) // orangey
+      {
+         reducer_bar_color.r = 248;
+         reducer_bar_color.g = 200;
+         reducer_bar_color.b = 0;
+      }
+      else // green
+      {
+         reducer_bar_color.r = 32;
+         reducer_bar_color.g = 240;
+         reducer_bar_color.b = 0;
+      }
+
       SDL_SetRenderDrawColor(renderer, 0, 55, 55, 255);
       SDL_RenderFillRect(renderer, &wrld_rect);
 
@@ -363,10 +410,11 @@ int main(void)
       draw_world(renderer, &wrld_rect);
       draw_food(renderer, food, food_count, &wrld_rect);
       draw_player(renderer, &player, &wrld_rect);
+      draw_vertical_bar(renderer, &reducer_bar_rect, reducer_bar_color, reduction_time_ratio);
 
       SDL_RenderPresent(renderer);
 
-      if(current_time / 1000000000 != prev_time / 1000000000)
+      if((current_time / 1000000000) != (prev_time / 1000000000))
       {
          char window_fps_title[64];
          snprintf(window_fps_title, sizeof(window_fps_title), "%s - FPS := %u", window_title, frame_cnt);
