@@ -259,7 +259,7 @@ int main(void)
    SDL_Time prev_time    = current_time;
    float    elapsed_time = 0.0;
 
-   bool paused = false;
+   bool paused = true;
 
    SDL_Color paused_clear_colour  = { .r = 8, .g = 10, .b = 44, .a = UINT8_MAX };
    SDL_Color running_clear_colour = { .r = 44, .g = 10, .b = 8, .a = UINT8_MAX };

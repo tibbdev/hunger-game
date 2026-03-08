@@ -5,14 +5,16 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+# Fixed Runtime Library string
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<NOT:$<CONFIG:Debug>>:>")
 
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-
-if(MSVC)
-add_compile_options(/arch:AVX2) #make sure SIMD optimizations take place
-endif()
+# Compatibility Flags
+set(SDL_AVX OFF CACHE BOOL "" FORCE)
+set(SDL_AVX2 OFF CACHE BOOL "" FORCE)
+set(SDL_SSE4_1 OFF CACHE BOOL "" FORCE)
+set(SDL_SSE4_2 OFF CACHE BOOL "" FORCE)
+set(SDL_LIBC ON CACHE BOOL "" FORCE)      # Tell SDL to use MSVC's libc
+set(SDL_STATIC ON CACHE BOOL "" FORCE)    # Explicitly signal static build
 
 option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 
