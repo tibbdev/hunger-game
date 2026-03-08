@@ -263,12 +263,12 @@ int main(void)
    SDL_Color paused_clear_colour  = { .r = 8, .g = 10, .b = 44, .a = UINT8_MAX };
    SDL_Color running_clear_colour = { .r = 44, .g = 10, .b = 8, .a = UINT8_MAX };
 
+   float dt = 0.0f;
+   float dx = 0.0f;
+   float dy = 0.0f;
+
    while(running)
    {
-      static float dt = 0.0f;
-      static float dx = 0.0f;
-      static float dy = 0.0f;
-
       SDL_GetCurrentTime(&current_time);
 
       if(!paused)
