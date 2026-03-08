@@ -231,6 +231,7 @@ int main(void)
 
    Food    food[FOOD_QUANTITY_MAX];
    uint8_t food_count = 0;
+   uint8_t food_max   = FOOD_QUANTITY_MAX;
    while(food_count < FOOD_QUANTITY_MAX)
    {
       float nutrition = (rand() % (FOOD_AMOUNT - FOOD_MIN)) + FOOD_MIN;
@@ -449,8 +450,8 @@ int main(void)
          {
             // Handle player-food collision
             player_eat(&player, food[i].nutrient);
-            // Respawn food at a new location
 
+            // Respawn food at a new location
             float nutrition = (rand() % (FOOD_AMOUNT - FOOD_MIN)) + FOOD_MIN;
             float size      = (FOOD_SIZE >> 1) + (FOOD_SIZE * nutrition / FOOD_AMOUNT);
             food_spawn(&food[i], WORLD_WIDTH - (FOOD_SIZE << 1), WORLD_HEIGHT - (FOOD_SIZE << 1), size, nutrition);
