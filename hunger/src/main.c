@@ -215,8 +215,10 @@ int main(void)
 
    float scale_x = (float)window_width / (float)WINDOW_WIDTH;
    float scale_y = (float)window_height / (float)WINDOW_HEIGHT;
+   
+   float scale = scale_x < scale_y ? scale_x : scale_y;
 
-   SDL_SetRenderScale(renderer, scale_x, scale_y);
+   SDL_SetRenderScale(renderer, scale, scale);
 
    bool      running = true;
    SDL_Event event;
@@ -260,6 +262,7 @@ int main(void)
    float    elapsed_time = 0.0;
 
    bool paused = true;
+   bool paused_released = true;
 
    SDL_Color paused_clear_colour  = { .r = 8, .g = 10, .b = 44, .a = UINT8_MAX };
    SDL_Color running_clear_colour = { .r = 44, .g = 10, .b = 8, .a = UINT8_MAX };
@@ -333,8 +336,12 @@ int main(void)
                   mv_rgt = true;
                   break;
 
-               case SDLK_P:
-                  paused = !paused;
+               case SDLK_SPACE:
+                  if(!paused_released)
+                  {
+                     paused = !paused;
+                  }
+                  paused_released = false;
                   break;
                default:
                   break;
@@ -360,6 +367,10 @@ int main(void)
                case SDLK_D:
                case SDLK_RIGHT:
                   mv_rgt = false;
+                  break;
+
+               case SDLK_SPACE:
+                  paused_released = true;
                   break;
 
                default:
