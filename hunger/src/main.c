@@ -16,6 +16,7 @@
 
 #include "SDL3/SDL.h"
 #include "SDL3/SDL_joystick.h"
+#include "SDL3_image/SDL_image.h"
 
 #include "hunger.h"
 #include "player.h"
@@ -39,6 +40,9 @@
 SDL_Window   *window       = NULL;
 SDL_Renderer *renderer     = NULL;
 const char   *window_title = "Hunger Game";
+
+SDL_Surface *arena_img = NULL;
+SDL_Texture *arena_tex = NULL;
 
 SDL_FRect wrld_rect = { (WINDOW_WIDTH >> 1) - (WORLD_WIDTH >> 1), (WINDOW_HEIGHT >> 1) - (WORLD_HEIGHT >> 1), WORLD_WIDTH, WORLD_HEIGHT };
 
@@ -188,17 +192,34 @@ void draw_food_count(SDL_Renderer *renderer, uint8_t food_count, uint32_t x, uin
 
 void draw_world(SDL_Renderer *renderer, SDL_FRect *wrld_rect)
 {
-   SDL_SetRenderDrawColor(renderer, 3, 79, 59, 255); // Dark color for world
-   SDL_RenderFillRect(renderer, wrld_rect);
-   SDL_SetRenderDrawColor(renderer, 240, 253, 244, 255); // Dark color for world
-   SDL_RenderRect(renderer, wrld_rect);
+   if(NULL != arena_tex)
+   {
+      float diff_h = arena_tex->h - wrld_rect->h;
+      float diff_w = arena_tex->w - wrld_rect->w;
+
+      static SDL_FRect arena_rect = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+      arena_rect.h = arena_tex->h;
+      arena_rect.w = arena_tex->w;
+      arena_rect.x = wrld_rect->x - (0.5f * diff_w);
+      arena_rect.y = wrld_rect->y - (0.5f * diff_h);
+
+      SDL_RenderTexture(renderer, arena_tex, NULL, &arena_rect);
+   }
+   else
+   {
+      SDL_SetRenderDrawColor(renderer, 3, 79, 59, 255); // Dark color for world
+      SDL_RenderFillRect(renderer, wrld_rect);
+      SDL_SetRenderDrawColor(renderer, 240, 253, 244, 255); // Dark color for world
+      SDL_RenderRect(renderer, wrld_rect);
+   }
 }
 
 int main(void)
 {
    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
 
-   SDL_CreateWindowAndRenderer(window_title, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_FULLSCREEN, &window, &renderer);
+   SDL_CreateWindowAndRenderer(window_title, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE, &window, &renderer);
 
    if(window == NULL || renderer == NULL)
    {
@@ -215,10 +236,12 @@ int main(void)
 
    float scale_x = (float)window_width / (float)WINDOW_WIDTH;
    float scale_y = (float)window_height / (float)WINDOW_HEIGHT;
-   
+
    float scale = scale_x < scale_y ? scale_x : scale_y;
 
    SDL_SetRenderScale(renderer, scale, scale);
+   arena_img = IMG_Load("assets/img/arena.png");
+   arena_tex = SDL_CreateTextureFromSurface(renderer, arena_img);
 
    bool      running = true;
    SDL_Event event;
@@ -261,7 +284,7 @@ int main(void)
    SDL_Time prev_time    = current_time;
    float    elapsed_time = 0.0;
 
-   bool paused = true;
+   bool paused          = true;
    bool paused_released = true;
 
    SDL_Color paused_clear_colour  = { .r = 8, .g = 10, .b = 44, .a = UINT8_MAX };
@@ -337,7 +360,7 @@ int main(void)
                   break;
 
                case SDLK_SPACE:
-                  if(!paused_released)
+                  if(paused_released)
                   {
                      paused = !paused;
                   }

@@ -21,6 +21,17 @@ option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 file(GLOB_RECURSE CORE_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}/src/*.c")
 file(GLOB_RECURSE PLATFORM_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/platform/src/*.c")
 
+# Disable some formats that are preventing the build from working
+set(SDL_IMAGE_AVIF OFF CACHE BOOL "" FORCE)
+set(SDL_IMAGE_JXL OFF CACHE BOOL "" FORCE)
+set(SDL_IMAGE_WEBP OFF CACHE BOOL "" FORCE)
+set(SDL_IMAGE_TIDY OFF CACHE BOOL "" FORCE)
+
+# Keep the basics on (usually ON by default)
+set(SDL_IMAGE_PNG ON CACHE BOOL "" FORCE)
+set(SDL_IMAGE_JPG ON CACHE BOOL "" FORCE)
+set(SDL_IMAGE_BACKEND_STB ON CACHE BOOL "" FORCE)
+
 add_subdirectory(vendor)
 
 add_executable(${PROJECT_NAME})
@@ -37,4 +48,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3
+    SDL3_ttf::SDL3_ttf-static
+    SDL3_image::SDL3_image-static
 )
