@@ -41,7 +41,6 @@ SDL_Window   *window       = NULL;
 SDL_Renderer *renderer     = NULL;
 const char   *window_title = "Hunger Game";
 
-SDL_Surface *arena_img = NULL;
 SDL_Texture *arena_tex = NULL;
 
 SDL_FRect wrld_rect = { (WINDOW_WIDTH >> 1) - (WORLD_WIDTH >> 1), (WINDOW_HEIGHT >> 1) - (WORLD_HEIGHT >> 1), WORLD_WIDTH, WORLD_HEIGHT };
@@ -240,8 +239,7 @@ int main(void)
    float scale = scale_x < scale_y ? scale_x : scale_y;
 
    SDL_SetRenderScale(renderer, scale, scale);
-   arena_img = IMG_Load("assets/img/arena.png");
-   arena_tex = SDL_CreateTextureFromSurface(renderer, arena_img);
+   arena_tex = SDL_CreateTextureFromSurface(renderer, IMG_Load("assets/img/arena.png"));
 
    bool      running = true;
    SDL_Event event;
