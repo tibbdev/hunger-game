@@ -202,7 +202,7 @@ int main(void)
 
    if(window == NULL || renderer == NULL)
    {
-      fprintf(stderr, "Failed to create window or renderer: %s\n", SDL_GetError());
+      printf("Failed to create window or renderer: %s\n", SDL_GetError());
       return 1;
    }
 
