@@ -466,7 +466,7 @@ int main(void)
       hunger_rect.y = (WINDOW_HEIGHT - 10) - ((float)player.hunger.hunger_level / player.hunger.max_hunger) * HUNGER_BAR_HEIGHT;
       hunger_rect.h = ((float)player.hunger.hunger_level / player.hunger.max_hunger) * HUNGER_BAR_HEIGHT;
 
-      SDL_FRect paused_src_rect  = { .x = 0, .y = 16, .w = 128, .h = 64 };
+      SDL_FRect paused_src_rect  = { .x = 0, .y = 33, .w = 256, .h = 122 };
       SDL_FRect paused_dest_rect = { .x = ((0.5f * WINDOW_WIDTH) - (0.5f * paused_src_rect.w)), .y = 128, .w = paused_src_rect.w, .h = paused_src_rect.h };
 
       SDL_RenderClear(renderer);
