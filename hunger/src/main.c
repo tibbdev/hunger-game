@@ -15,8 +15,9 @@
 #include <string.h>
 
 #include "SDL3/SDL.h"
+#include "SDL3/SDL_surface.h"
+#include "SDL3/SDL_audio.h"
 #include "SDL3/SDL_joystick.h"
-#include "SDL3_image/SDL_image.h"
 
 #include "hunger.h"
 #include "player.h"
@@ -42,6 +43,8 @@ SDL_Renderer *renderer     = NULL;
 const char   *window_title = "Hunger Game";
 
 SDL_Texture *arena_tex = NULL;
+SDL_Texture *text_tex  = NULL;
+SDL_Texture *bg_tex    = NULL;
 
 SDL_FRect wrld_rect = { (WINDOW_WIDTH >> 1) - (WORLD_WIDTH >> 1), (WINDOW_HEIGHT >> 1) - (WORLD_HEIGHT >> 1), WORLD_WIDTH, WORLD_HEIGHT };
 
@@ -218,7 +221,7 @@ int main(void)
 {
    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
 
-   SDL_CreateWindowAndRenderer(window_title, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE, &window, &renderer);
+   SDL_CreateWindowAndRenderer(window_title, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_FULLSCREEN | SDL_WINDOW_RESIZABLE, &window, &renderer);
 
    if(window == NULL || renderer == NULL)
    {
@@ -239,7 +242,10 @@ int main(void)
    float scale = scale_x < scale_y ? scale_x : scale_y;
 
    SDL_SetRenderScale(renderer, scale, scale);
-   arena_tex = SDL_CreateTextureFromSurface(renderer, IMG_Load("assets/img/arena.png"));
+
+   bg_tex    = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/background.png"));
+   arena_tex = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/arena.png"));
+   text_tex  = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/text.png"));
 
    bool      running = true;
    SDL_Event event;
@@ -460,16 +466,15 @@ int main(void)
       hunger_rect.y = (WINDOW_HEIGHT - 10) - ((float)player.hunger.hunger_level / player.hunger.max_hunger) * HUNGER_BAR_HEIGHT;
       hunger_rect.h = ((float)player.hunger.hunger_level / player.hunger.max_hunger) * HUNGER_BAR_HEIGHT;
 
-      // Render the window
-      if(paused)
-      {
-         SDL_SetRenderDrawColor(renderer, paused_clear_colour.r, paused_clear_colour.g, paused_clear_colour.b, paused_clear_colour.a); // Clear paused colour
-      }
-      else
-      {
-         SDL_SetRenderDrawColor(renderer, running_clear_colour.r, running_clear_colour.g, running_clear_colour.b, running_clear_colour.a); // Clear running colour
-      }
+      SDL_FRect paused_src_rect  = { .x = 0, .y = 16, .w = 128, .h = 64 };
+      SDL_FRect paused_dest_rect = { .x = ((0.5f * WINDOW_WIDTH) - (0.5f * paused_src_rect.w)), .y = 128, .w = paused_src_rect.w, .h = paused_src_rect.h };
+
       SDL_RenderClear(renderer);
+
+      if(NULL != bg_tex)
+      {
+         SDL_RenderTexture(renderer, bg_tex, NULL, NULL);
+      }
 
       // Check for collision between player and food
       collision_rect_t player_collision_box = { player.x - 0.5f * player.size, player.y - 0.5f * player.size, player.size, player.size };
@@ -519,6 +524,23 @@ int main(void)
       draw_player(renderer, &player, &wrld_rect);
       draw_vertical_bar64(renderer, &reducer_bar_rect, reducer_bar_color, reduction_time_ratio);
       draw_food_count(renderer, food_count, reducer_bar_rect.x + reducer_bar_rect.w + 8, reducer_bar_rect.y, 4);
+
+      // Render the window
+      if(NULL == text_tex)
+      {
+         if(paused)
+         {
+            SDL_SetRenderDrawColor(renderer, paused_clear_colour.r, paused_clear_colour.g, paused_clear_colour.b, paused_clear_colour.a); // Clear paused colour
+         }
+         else
+         {
+            SDL_SetRenderDrawColor(renderer, running_clear_colour.r, running_clear_colour.g, running_clear_colour.b, running_clear_colour.a); // Clear running colour
+         }
+      }
+      else if(paused)
+      {
+         SDL_RenderTexture(renderer, text_tex, &paused_src_rect, &paused_dest_rect);
+      }
 
       SDL_RenderPresent(renderer);
 
