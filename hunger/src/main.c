@@ -307,7 +307,7 @@ int main(void)
          dt = current_time - prev_time;
          dt *= 0.000000001;
 
-         if(player.state != PLAYER_DEAD)
+         if((player.state != PLAYER_DEAD) && (player.hunger_state == PLAYER_HUNGER_STARVING))
          {
             elapsed_time += dt;
             if(elapsed_time >= FOOD_QUANTITY_REDUCE_AFTER_secs)

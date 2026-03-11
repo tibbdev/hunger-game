@@ -20,7 +20,7 @@ void food_spawn(Food *food, uint32_t x_max, uint32_t y_max, float size, uint32_t
       return; // Invalid world dimensions
    }
 
-   uint16_t grid_size = 16;
+   uint16_t grid_size = 8;
 
    if(size > (x_max / grid_size))
    {
