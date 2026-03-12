@@ -42,10 +42,11 @@ SDL_Window   *window       = NULL;
 SDL_Renderer *renderer     = NULL;
 const char   *window_title = "Hunger Game";
 
-SDL_Texture *arena_tex = NULL;
-SDL_Texture *text_tex  = NULL;
-SDL_Texture *bg_tex    = NULL;
-SDL_Texture *food_tex  = NULL;
+SDL_Texture *arena_tex  = NULL;
+SDL_Texture *text_tex   = NULL;
+SDL_Texture *bg_tex     = NULL;
+SDL_Texture *food_tex   = NULL;
+SDL_Texture *player_tex = NULL;
 
 SDL_FRect wrld_rect = { (WINDOW_WIDTH >> 1) - (WORLD_WIDTH >> 1), (WINDOW_HEIGHT >> 1) - (WORLD_HEIGHT >> 1), WORLD_WIDTH, WORLD_HEIGHT };
 
@@ -91,28 +92,44 @@ void draw_vertical_bar64(SDL_Renderer *renderer, SDL_FRect *reducer_bar_rect, SD
    SDL_RenderRect(renderer, reducer_bar_rect);
 }
 
-void draw_player(SDL_Renderer *renderer, Player *player, SDL_FRect *wrld_rect)
+void draw_player(SDL_Renderer *renderer, Player *player, SDL_FRect *wrld_rect, float elapsed_time)
 {
-   SDL_Color plyr_clr = { 255, 255, 0, 255 }; // Default color for hunger bar (yellow)
+   SDL_Color plyr_clr   = { 255, 255, 0, 255 }; // Default color for hunger bar (yellow)
+   uint16_t  sprite_row = 0;
+   uint64_t  times      = elapsed_time;
+   elapsed_time -= (float)times;
+   times = elapsed_time * 6;
+   times %= 4;
+
    if(player->state == PLAYER_DEAD)
    {
       // If the player is dead, set the hunger bar to Super Dark Red
-      plyr_clr = (SDL_Color) { 69, 7, 9, 255 }; // Super Dark Red for dead state
+      plyr_clr         = (SDL_Color) { 69, 7, 9, 255 }; // Super Dark Red for dead state
+      sprite_row       = 3;
+      player->rotation = 360;
+
+      times = elapsed_time * 2;
+      times %= 4;
    }
    else if(player->hunger_state == PLAYER_HUNGER_STARVED)
    {
       // If the player is starved, set the hunger bar to dark red
-      plyr_clr = (SDL_Color) { 159, 7, 18, 255 }; // Dark color for starved state
+      plyr_clr   = (SDL_Color) { 159, 7, 18, 255 }; // Dark color for starved state
+      sprite_row = 3;
+      times      = elapsed_time * 3;
+      times %= 4;
    }
    else if(player->hunger_state == PLAYER_HUNGER_STARVING)
    {
       // If the player is starving, set the hunger bar to red
-      plyr_clr = (SDL_Color) { 251, 33, 21, 255 }; // Red color for hungry state
+      plyr_clr   = (SDL_Color) { 251, 33, 21, 255 }; // Red color for hungry state
+      sprite_row = 2;
    }
    else if(player->hunger_state == PLAYER_HUNGER_HUNGRY)
    {
       // If the player is hungry, set the hunger bar to orange
-      plyr_clr = (SDL_Color) { 254, 154, 55, 255 }; // Orange color for hungry state
+      plyr_clr   = (SDL_Color) { 254, 154, 55, 255 }; // Orange color for hungry state
+      sprite_row = 1;
    }
    else
    {
@@ -120,12 +137,35 @@ void draw_player(SDL_Renderer *renderer, Player *player, SDL_FRect *wrld_rect)
       plyr_clr = (SDL_Color) { 187, 244, 81, 255 }; // Green color for okay state
    }
 
-   SDL_FRect plyr_rect;
-   plyr_rect.h = player->size;
-   plyr_rect.w = player->size;
-   plyr_rect.x = wrld_rect->x + player->x - (player->size * 0.5f);
-   plyr_rect.y = wrld_rect->y + player->y - (player->size * 0.5f);
+   if(NULL != player_tex)
+   {
+      SDL_FRect playr_src_rect;
+      playr_src_rect.w = 12;
+      playr_src_rect.h = 12;
+      playr_src_rect.x = (times * 12) % player_tex->w;
+      playr_src_rect.y = sprite_row * playr_src_rect.h * 2 + (playr_src_rect.h * player->moving);
 
+      SDL_FRect playr_dest_rect;
+      playr_dest_rect.w = 12;
+      playr_dest_rect.h = 12;
+      playr_dest_rect.x = wrld_rect->x + player->x - (playr_dest_rect.w * 0.5f);
+      playr_dest_rect.y = wrld_rect->y + player->y - (playr_dest_rect.h * 0.5f);
+
+      SDL_RenderTextureRotated(renderer, player_tex, &playr_src_rect, &playr_dest_rect, -1 * player->rotation, NULL, SDL_FLIP_NONE);
+   }
+   else
+   {
+      SDL_FRect plyr_rect;
+      plyr_rect.h = player->size;
+      plyr_rect.w = player->size;
+      plyr_rect.x = wrld_rect->x + player->x - (player->size * 0.5f);
+      plyr_rect.y = wrld_rect->y + player->y - (player->size * 0.5f);
+
+      SDL_RenderFillRect(renderer, &plyr_rect);
+
+      SDL_SetRenderDrawColor(renderer, plyr_clr.r * 0.75f, plyr_clr.g * 0.75f, plyr_clr.b * 0.75f, plyr_clr.a);
+      SDL_RenderRect(renderer, &plyr_rect);
+   }
    float player_hunger_bar_y   = wrld_rect->y + player->y - (player->size * 0.5f) - 3.0f;                                                 // Position the hunger bar above the player
    float player_hunger_bar_x0  = wrld_rect->x + player->x - (player->size * 0.5f) - 2.0f;                                                 // Center the hunger bar above the player
    float player_hunger_bar_x1  = wrld_rect->x + (player->x + (player->size * 0.5f) + 1.0f);                                               // Center the hunger bar above the player
@@ -138,11 +178,6 @@ void draw_player(SDL_Renderer *renderer, Player *player, SDL_FRect *wrld_rect)
 
    SDL_SetRenderDrawColor(renderer, plyr_clr.r, plyr_clr.g, plyr_clr.b, plyr_clr.a);
    SDL_RenderLine(renderer, player_hunger_bar_x0, player_hunger_bar_y, player_hunger_bar_x2, player_hunger_bar_y);
-
-   SDL_RenderFillRect(renderer, &plyr_rect);
-
-   SDL_SetRenderDrawColor(renderer, plyr_clr.r * 0.75f, plyr_clr.g * 0.75f, plyr_clr.b * 0.75f, plyr_clr.a);
-   SDL_RenderRect(renderer, &plyr_rect);
 }
 
 void draw_food(SDL_Renderer *renderer, Food *food, uint8_t food_count, SDL_FRect *wrld_rect, float elapsed_time)
@@ -296,10 +331,11 @@ int main(void)
 
    SDL_SetRenderScale(renderer, scale, scale);
 
-   bg_tex    = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/background.png"));
-   arena_tex = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/arena.png"));
-   text_tex  = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/text.png"));
-   food_tex  = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/foodfromcts1a.png"));
+   bg_tex     = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/background.png"));
+   arena_tex  = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/arena.png"));
+   text_tex   = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/text.png"));
+   player_tex = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/player.png"));
+   food_tex   = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/foodfromcts1a.png"));
 
    bool      running = true;
    SDL_Event event;
@@ -352,6 +388,8 @@ int main(void)
    float dt = 0.0f;
    float dx = 0.0f;
    float dy = 0.0f;
+
+   player.rotation = 0;
 
    while(running)
    {
@@ -464,11 +502,13 @@ int main(void)
 
       if(mv_lft && !mv_rgt)
       {
-         dx = -1;
+         dx              = -1;
+         player.rotation = 270;
       }
       else if(!mv_lft && mv_rgt)
       {
-         dx = 1;
+         dx              = 1;
+         player.rotation = 90;
       }
       else
       {
@@ -478,10 +518,26 @@ int main(void)
       if(mv_up && !mv_dn)
       {
          dy = -1;
+         if(0 == player.rotation)
+         {
+            player.rotation = 135;
+         }
+         else
+         {
+            player.rotation = 360;
+         }
       }
       else if(!mv_up && mv_dn)
       {
          dy = 1;
+         if(0 == player.rotation)
+         {
+            player.rotation += 45;
+         }
+         else
+         {
+            player.rotation = 180;
+         }
       }
       else
       {
@@ -577,7 +633,7 @@ int main(void)
       // draw_hunger_bar(renderer, &hunger_rect, hunger_color);
       draw_world(renderer, &wrld_rect);
       draw_food(renderer, food, food_count, &wrld_rect, forever_time);
-      draw_player(renderer, &player, &wrld_rect);
+      draw_player(renderer, &player, &wrld_rect, forever_time);
       draw_vertical_bar64(renderer, &reducer_bar_rect, reducer_bar_color, reduction_time_ratio);
       draw_food_count(renderer, food_count, reducer_bar_rect.x + reducer_bar_rect.w + 8, reducer_bar_rect.y, 4);
 

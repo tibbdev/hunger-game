@@ -50,6 +50,8 @@ typedef struct
    float        starving_threshold;    // Threshold for starving state change
    float        starve_time_threshold; // Threshold for starvation time
    uint16_t     eaten_count;           // Total number of things eaten over time
+   double       rotation;              // Rotation for rendering
+   bool         moving;                // is player moving or not?
 
    Hunger hunger; // Hunger structure to track hunger levels
 } Player;

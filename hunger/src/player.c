@@ -59,7 +59,7 @@ void player_update(Player *player, float delta_time)
       }
       else if(hunger_below_threshold(&player->hunger, player->starving_threshold))
       {
-         player->max_speed    = 180.0f;
+         player->max_speed    = 150.0f;
          player->hunger_state = PLAYER_HUNGER_HUNGRY; // Player is Hungry
       }
       else if(!hunger_is_full(&player->hunger))
@@ -111,20 +111,18 @@ void player_move(Player *player, float dt, float dx, float dy)
       return; // Handle null pointer case
    }
 
+   player->moving = false;
+
    if(player->state == PLAYER_DEAD)
    {
       return; // Do not move if the player is dead
-   }
-
-   if(player->hunger_state == PLAYER_HUNGER_STARVED)
-   {
-      return; // Do not move if the player is starved
    }
 
    float length = sqrtf(dx * dx + dy * dy);
 
    if(length > 0.0f)
    {
+      player->moving = true;
       if(player->speed_x < player->max_speed)
       {
          player->speed_x += player->accel * dt; // Accelerate the player
@@ -178,6 +176,7 @@ void player_move(Player *player, float dt, float dx, float dy)
             player->y += player->dy * player->speed_y * dt;
          }
       }
+
       player->state = PLAYER_IDLE;
    }
 }
