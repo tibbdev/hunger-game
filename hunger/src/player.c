@@ -38,6 +38,7 @@ void player_init(Player *player, float max_hunger)
    player->starve_time_threshold = 10.0f;                             // Set threshold for starvation time
    player->starved_time          = 0.0f;                              // Initialize starved time
    player->eaten_count           = 0;                                 // Nothing eaten yet
+   player->score                 = 0;                                 // Nothing eaten yet
 }
 
 void player_update(Player *player, float delta_time)
@@ -94,13 +95,15 @@ void player_update(Player *player, float delta_time)
    }
 }
 
-void player_eat(Player *player, float nutrition)
+void player_eat(Player *player, float nutrition, uint32_t score_inc)
 {
    if(player == NULL)
    {
       return; // Handle null pointer case
    }
+
    player->eaten_count++;
+   player->score += score_inc * (uint16_t)nutrition;
    hunger_eat(&player->hunger, nutrition);
 }
 

@@ -281,7 +281,7 @@ void draw_food_count(SDL_Renderer *renderer, uint8_t food_count, uint32_t x, uin
    }
 }
 
-void draw_uint(SDL_Renderer *renderer, uint32_t x, uint32_t y, uint8_t colour, uint32_t number)
+void draw_uint_scaled_3dig(SDL_Renderer *renderer, uint32_t x, uint32_t y, uint8_t colour, uint16_t number, float scale)
 {
    if(NULL == renderer)
    {
@@ -295,10 +295,7 @@ void draw_uint(SDL_Renderer *renderer, uint32_t x, uint32_t y, uint8_t colour, u
 
    char str_num[11] = "";
 
-   sprintf(str_num, "%05lu", number);
-
-   printf(str_num);
-   printf("\r\n");
+   sprintf(str_num, "%03lu", number);
 
    uint16_t  idx = 0;
    SDL_FRect number_src_rect;
@@ -311,8 +308,8 @@ void draw_uint(SDL_Renderer *renderer, uint32_t x, uint32_t y, uint8_t colour, u
 
    number_dest_rect.x = x;
    number_dest_rect.y = y;
-   number_dest_rect.w = number_src_rect.w;
-   number_dest_rect.h = number_src_rect.h;
+   number_dest_rect.w = scale * number_src_rect.w;
+   number_dest_rect.h = scale * number_src_rect.h;
    do
    {
       switch(str_num[idx])
@@ -343,9 +340,133 @@ void draw_uint(SDL_Renderer *renderer, uint32_t x, uint32_t y, uint8_t colour, u
    } while(str_num[idx]);
 }
 
-void draw_score(SDL_Renderer *renderer, uint8_t colour, uint32_t score)
+void draw_uint_scaled(SDL_Renderer *renderer, uint32_t x, uint32_t y, uint8_t colour, uint32_t number, float scale)
 {
-   draw_uint(renderer, 740, 488, colour, score);
+   if(NULL == renderer)
+   {
+      return;
+   }
+
+   if(NULL == text_tex)
+   {
+      return;
+   }
+
+   char str_num[11] = "";
+
+   sprintf(str_num, "%lu", number);
+
+   uint16_t  idx = 0;
+   SDL_FRect number_src_rect;
+   SDL_FRect number_dest_rect;
+
+   number_src_rect.x = 0;
+   number_src_rect.y = 0;
+   number_src_rect.w = 16;
+   number_src_rect.h = 32;
+
+   number_dest_rect.x = x;
+   number_dest_rect.y = y;
+   number_dest_rect.w = scale * number_src_rect.w;
+   number_dest_rect.h = scale * number_src_rect.h;
+   do
+   {
+      switch(str_num[idx])
+      {
+         case '0':
+            number_src_rect.x = number_src_rect.w * (9 + (10 * colour));
+            break;
+         case '1':
+         case '2':
+         case '3':
+         case '4':
+         case '5':
+         case '6':
+         case '7':
+         case '8':
+         case '9':
+            number_src_rect.x = number_src_rect.w * (((uint16_t)str_num[idx] - (uint16_t)'1') + (10 * colour));
+            break;
+
+         default:
+            break;
+      }
+
+      number_dest_rect.x = x + idx * number_dest_rect.w;
+
+      SDL_RenderTexture(renderer, text_tex, &number_src_rect, &number_dest_rect);
+      idx++;
+   } while(str_num[idx]);
+}
+
+void draw_uint_scaled_5dig(SDL_Renderer *renderer, uint32_t x, uint32_t y, uint8_t colour, uint32_t number, float scale)
+{
+   if(NULL == renderer)
+   {
+      return;
+   }
+
+   if(NULL == text_tex)
+   {
+      return;
+   }
+
+   char str_num[11] = "";
+
+   sprintf(str_num, "%05lu", number);
+
+   uint16_t  idx = 0;
+   SDL_FRect number_src_rect;
+   SDL_FRect number_dest_rect;
+
+   number_src_rect.x = 0;
+   number_src_rect.y = 0;
+   number_src_rect.w = 16;
+   number_src_rect.h = 32;
+
+   number_dest_rect.x = x;
+   number_dest_rect.y = y;
+   number_dest_rect.w = scale * number_src_rect.w;
+   number_dest_rect.h = scale * number_src_rect.h;
+   do
+   {
+      switch(str_num[idx])
+      {
+         case '0':
+            number_src_rect.x = number_src_rect.w * (9 + (10 * colour));
+            break;
+         case '1':
+         case '2':
+         case '3':
+         case '4':
+         case '5':
+         case '6':
+         case '7':
+         case '8':
+         case '9':
+            number_src_rect.x = number_src_rect.w * (((uint16_t)str_num[idx] - (uint16_t)'1') + (10 * colour));
+            break;
+
+         default:
+            break;
+      }
+
+      number_dest_rect.x = x + idx * number_dest_rect.w;
+
+      SDL_RenderTexture(renderer, text_tex, &number_src_rect, &number_dest_rect);
+      idx++;
+   } while(str_num[idx]);
+}
+
+void draw_uint(SDL_Renderer *renderer, uint32_t x, uint32_t y, uint8_t colour, uint32_t number)
+{
+   draw_uint_scaled(renderer, x, y, colour, number, 1.0);
+}
+
+void draw_score(SDL_Renderer *renderer, uint8_t colour, Player const *const player)
+{
+   draw_uint_scaled_5dig(renderer, 740, 462, 1, player->score, 1.0f);
+   draw_uint_scaled_3dig(renderer, 764, 496, colour, player->eaten_count, 0.6f);
 }
 
 void draw_world(SDL_Renderer *renderer, SDL_FRect *wrld_rect)
@@ -414,7 +535,9 @@ int main(void)
 
    Player player;
    player_init(&player, MAX_HUNGER);
-   player_move_to(&player, 200, 200);
+   player_move_to(&player, 0.5f * WORLD_WIDTH, 0.5f * WORLD_HEIGHT);
+
+   uint32_t score_inc = 1;
 
    Food    food[FOOD_QUANTITY_MAX];
    uint8_t food_count = 0;
@@ -496,6 +619,7 @@ int main(void)
             if(elapsed_time >= FOOD_QUANTITY_REDUCE_AFTER_secs)
             {
                elapsed_time = 0.0f;
+               score_inc++;
                if(food_count > FOOD_QUANTITY_MIN)
                {
                   food_count -= FOOD_QUANTITY_REDUCER;
@@ -687,7 +811,7 @@ int main(void)
          if(collision_aabb_centered(&player_collision_box, &food_collision_box))
          {
             // Handle player-food collision
-            player_eat(&player, food[i].nutrient);
+            player_eat(&player, food[i].nutrient, score_inc);
 
             // Respawn food at a new location
             float nutrition = (rand() % (FOOD_AMOUNT - FOOD_MIN)) + FOOD_MIN;
@@ -725,7 +849,7 @@ int main(void)
       draw_player(renderer, &player, &wrld_rect, forever_time);
       draw_vertical_bar64(renderer, &reducer_bar_rect, reducer_bar_color, reduction_time_ratio);
       draw_food_count(renderer, food_count, reducer_bar_rect.x + reducer_bar_rect.w + 8, reducer_bar_rect.y, 4);
-      draw_score(renderer, eat_count_colour, player.eaten_count);
+      draw_score(renderer, eat_count_colour, &player);
 
       // Render the window
       if(NULL == text_tex)

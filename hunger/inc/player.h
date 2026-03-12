@@ -49,6 +49,7 @@ typedef struct
    float        hungry_threshold;      // Threshold for hunger state change
    float        starving_threshold;    // Threshold for starving state change
    float        starve_time_threshold; // Threshold for starvation time
+   uint32_t     score;                 // Score increases with each food item eaten
    uint16_t     eaten_count;           // Total number of things eaten over time
    double       rotation;              // Rotation for rendering
    bool         moving;                // is player moving or not?
@@ -77,7 +78,7 @@ void player_update(Player *player, float delta_time);
  * @param player Pointer to the Player structure to update.
  * @param nutrition Amount of nutrition gained from the food
  */
-void player_eat(Player *player, float nutrition);
+void player_eat(Player *player, float nutrition, uint32_t score_inc);
 
 /**
  * @brief Moves the player by a specified amount in the x and y directions.
