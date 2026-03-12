@@ -98,7 +98,7 @@ void draw_player(SDL_Renderer *renderer, Player *player, SDL_FRect *wrld_rect, f
    uint16_t  sprite_row = 0;
    uint64_t  times      = elapsed_time;
    elapsed_time -= (float)times;
-   times = elapsed_time * 6;
+   times = elapsed_time * 5;
    times %= 4;
 
    if(player->state == PLAYER_DEAD)
@@ -108,7 +108,7 @@ void draw_player(SDL_Renderer *renderer, Player *player, SDL_FRect *wrld_rect, f
       sprite_row       = 3;
       player->rotation = 360;
 
-      times = elapsed_time * 2;
+      times = elapsed_time;
       times %= 4;
    }
    else if(player->hunger_state == PLAYER_HUNGER_STARVED)
@@ -116,7 +116,7 @@ void draw_player(SDL_Renderer *renderer, Player *player, SDL_FRect *wrld_rect, f
       // If the player is starved, set the hunger bar to dark red
       plyr_clr   = (SDL_Color) { 159, 7, 18, 255 }; // Dark color for starved state
       sprite_row = 3;
-      times      = elapsed_time * 3;
+      times      = elapsed_time * 2;
       times %= 4;
    }
    else if(player->hunger_state == PLAYER_HUNGER_STARVING)
@@ -166,6 +166,7 @@ void draw_player(SDL_Renderer *renderer, Player *player, SDL_FRect *wrld_rect, f
       SDL_SetRenderDrawColor(renderer, plyr_clr.r * 0.75f, plyr_clr.g * 0.75f, plyr_clr.b * 0.75f, plyr_clr.a);
       SDL_RenderRect(renderer, &plyr_rect);
    }
+
    float player_hunger_bar_y   = wrld_rect->y + player->y - (player->size * 0.5f) - 3.0f;                                                 // Position the hunger bar above the player
    float player_hunger_bar_x0  = wrld_rect->x + player->x - (player->size * 0.5f) - 2.0f;                                                 // Center the hunger bar above the player
    float player_hunger_bar_x1  = wrld_rect->x + (player->x + (player->size * 0.5f) + 1.0f);                                               // Center the hunger bar above the player
@@ -280,6 +281,73 @@ void draw_food_count(SDL_Renderer *renderer, uint8_t food_count, uint32_t x, uin
    }
 }
 
+void draw_uint(SDL_Renderer *renderer, uint32_t x, uint32_t y, uint8_t colour, uint32_t number)
+{
+   if(NULL == renderer)
+   {
+      return;
+   }
+
+   if(NULL == text_tex)
+   {
+      return;
+   }
+
+   char str_num[11] = "";
+
+   sprintf(str_num, "%05lu", number);
+
+   printf(str_num);
+   printf("\r\n");
+
+   uint16_t  idx = 0;
+   SDL_FRect number_src_rect;
+   SDL_FRect number_dest_rect;
+
+   number_src_rect.x = 0;
+   number_src_rect.y = 0;
+   number_src_rect.w = 16;
+   number_src_rect.h = 32;
+
+   number_dest_rect.x = x;
+   number_dest_rect.y = y;
+   number_dest_rect.w = number_src_rect.w;
+   number_dest_rect.h = number_src_rect.h;
+   do
+   {
+      switch(str_num[idx])
+      {
+         case '0':
+            number_src_rect.x = number_src_rect.w * (9 + (10 * colour));
+            break;
+         case '1':
+         case '2':
+         case '3':
+         case '4':
+         case '5':
+         case '6':
+         case '7':
+         case '8':
+         case '9':
+            number_src_rect.x = number_src_rect.w * (((uint16_t)str_num[idx] - (uint16_t)'1') + (10 * colour));
+            break;
+
+         default:
+            break;
+      }
+
+      number_dest_rect.x = x + idx * number_dest_rect.w;
+
+      SDL_RenderTexture(renderer, text_tex, &number_src_rect, &number_dest_rect);
+      idx++;
+   } while(str_num[idx]);
+}
+
+void draw_score(SDL_Renderer *renderer, uint8_t colour, uint32_t score)
+{
+   draw_uint(renderer, 740, 488, colour, score);
+}
+
 void draw_world(SDL_Renderer *renderer, SDL_FRect *wrld_rect)
 {
    if(NULL != arena_tex)
@@ -359,7 +427,7 @@ int main(void)
       food_count++;
    }
 
-   SDL_FRect reducer_bar_rect  = { .x = 32, .y = 16, .w = 16, .h = 128 };
+   SDL_FRect reducer_bar_rect  = { .x = 740, .y = 14, .w = 16, .h = 128 };
    SDL_Color reducer_bar_color = { 32, 255, 16, 255 };
 
    SDL_FRect hunger_rect  = { 10, 10 + ((float)player.hunger.hunger_level / player.hunger.max_hunger) * HUNGER_BAR_HEIGHT, 10, HUNGER_BAR_HEIGHT };
@@ -389,14 +457,35 @@ int main(void)
    float dx = 0.0f;
    float dy = 0.0f;
 
+   uint32_t eat_counts[24];
+   for(uint16_t idx = 0; 24 > idx; idx++)
+   {
+      eat_counts[idx] = 0;
+   }
+   uint16_t eat_count_idx = 0;
+
+   uint8_t eat_count_colour = 1;
+
    player.rotation = 0;
 
    while(running)
    {
       SDL_GetCurrentTime(&current_time);
+      eat_count_colour = 1;
 
       if(!paused)
       {
+         eat_counts[eat_count_idx % 24] = player.eaten_count;
+         eat_count_idx++;
+
+         for(uint16_t idx = 0; (24 > idx) && (1 == eat_count_colour); idx++)
+         {
+            if(player.eaten_count != eat_counts[idx])
+            {
+               eat_count_colour = 2;
+            }
+         }
+
          dt = current_time - prev_time;
          dt *= 0.000000001;
          forever_time += dt;
@@ -636,6 +725,7 @@ int main(void)
       draw_player(renderer, &player, &wrld_rect, forever_time);
       draw_vertical_bar64(renderer, &reducer_bar_rect, reducer_bar_color, reduction_time_ratio);
       draw_food_count(renderer, food_count, reducer_bar_rect.x + reducer_bar_rect.w + 8, reducer_bar_rect.y, 4);
+      draw_score(renderer, eat_count_colour, player.eaten_count);
 
       // Render the window
       if(NULL == text_tex)
