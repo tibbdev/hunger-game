@@ -45,6 +45,7 @@ const char   *window_title = "Hunger Game";
 SDL_Texture *arena_tex = NULL;
 SDL_Texture *text_tex  = NULL;
 SDL_Texture *bg_tex    = NULL;
+SDL_Texture *food_tex  = NULL;
 
 SDL_FRect wrld_rect = { (WINDOW_WIDTH >> 1) - (WORLD_WIDTH >> 1), (WINDOW_HEIGHT >> 1) - (WORLD_HEIGHT >> 1), WORLD_WIDTH, WORLD_HEIGHT };
 
@@ -144,7 +145,7 @@ void draw_player(SDL_Renderer *renderer, Player *player, SDL_FRect *wrld_rect)
    SDL_RenderRect(renderer, &plyr_rect);
 }
 
-void draw_food(SDL_Renderer *renderer, Food *food, uint8_t food_count, SDL_FRect *wrld_rect)
+void draw_food(SDL_Renderer *renderer, Food *food, uint8_t food_count, SDL_FRect *wrld_rect, float elapsed_time)
 {
    if(food == NULL || food_count == 0)
    {
@@ -158,13 +159,65 @@ void draw_food(SDL_Renderer *renderer, Food *food, uint8_t food_count, SDL_FRect
 
    for(uint8_t i = 0; i < food_count; i++)
    {
-      SDL_SetRenderDrawColor(renderer, 240, 128, 128, 255); // Salmon color for food
-      SDL_FRect food_rect;
-      food_rect.h = food[i].size;
-      food_rect.w = food[i].size;
-      food_rect.x = wrld_rect->x + food[i].x - (food[i].size * 0.5f);
-      food_rect.y = wrld_rect->y + food[i].y - (food[i].size * 0.5f);
-      SDL_RenderFillRect(renderer, &food_rect);
+      if(NULL != food_tex)
+      {
+         SDL_FRect food_src_rect;
+         food_src_rect.h  = 34;
+         food_src_rect.w  = 34;
+         uint8_t food_sel = (uint8_t)roundf(((float)food[i].nutrient / (FOOD_AMOUNT + FOOD_MIN)) * 6.0f);
+         // printf("food_sel := %u\r\n", food_sel);
+
+         switch(food_sel)
+         {
+            case 0:
+               food_src_rect.x = 34;
+               food_src_rect.y = 0;
+               break;
+            case 1:
+               food_src_rect.x = 13 * 34;
+               food_src_rect.y = 0;
+               break;
+            case 2:
+               food_src_rect.x = 6 * 34;
+               food_src_rect.y = 34;
+               break;
+            case 3:
+               food_src_rect.x = 0;
+               food_src_rect.y = 3 * 34;
+               break;
+            case 4:
+               food_src_rect.x = 11 * 34;
+               food_src_rect.y = 3 * 34;
+               break;
+            case 5:
+               food_src_rect.x = 8 * 34;
+               food_src_rect.y = 7 * 34;
+               break;
+
+            default:
+               food_src_rect.x = 34;
+               food_src_rect.y = 0;
+               break;
+         }
+
+         SDL_FRect food_dest_rect;
+         food_dest_rect.h = 0.42f * (26 + (2 * food_sel));
+         food_dest_rect.w = 0.42f * (26 + (2 * food_sel));
+         food_dest_rect.x = wrld_rect->x + food[i].x - (0.5f * food_dest_rect.w) + 0.2f * sinf((food[i].freq * elapsed_time) + food[i].freq);
+         food_dest_rect.y = wrld_rect->y + food[i].y - (0.5f * food_dest_rect.h) + 0.2f * cosf((food[i].freq * elapsed_time) - food[i].freq);
+
+         SDL_RenderTexture(renderer, food_tex, &food_src_rect, &food_dest_rect);
+      }
+      else
+      {
+         SDL_SetRenderDrawColor(renderer, 240, 128, 128, 255); // Salmon color for food
+         SDL_FRect food_rect;
+         food_rect.h = food[i].size;
+         food_rect.w = food[i].size;
+         food_rect.x = wrld_rect->x + food[i].x - (food[i].size * 0.5f);
+         food_rect.y = wrld_rect->y + food[i].y - (food[i].size * 0.5f);
+         SDL_RenderFillRect(renderer, &food_rect);
+      }
    }
 }
 
@@ -246,6 +299,7 @@ int main(void)
    bg_tex    = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/background.png"));
    arena_tex = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/arena.png"));
    text_tex  = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/text.png"));
+   food_tex  = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/foodfromcts1a.png"));
 
    bool      running = true;
    SDL_Event event;
@@ -287,6 +341,7 @@ int main(void)
    SDL_GetCurrentTime(&current_time);
    SDL_Time prev_time    = current_time;
    float    elapsed_time = 0.0;
+   float    forever_time = 0.0;
 
    bool paused          = true;
    bool paused_released = true;
@@ -306,8 +361,9 @@ int main(void)
       {
          dt = current_time - prev_time;
          dt *= 0.000000001;
+         forever_time += dt;
 
-         if((player.state != PLAYER_DEAD) && (player.hunger_state == PLAYER_HUNGER_STARVING))
+         if((player.state != PLAYER_DEAD) && (player.hunger_state != PLAYER_HUNGER_STARVING))
          {
             elapsed_time += dt;
             if(elapsed_time >= FOOD_QUANTITY_REDUCE_AFTER_secs)
@@ -460,7 +516,7 @@ int main(void)
 
       // Update player state
       player_move(&player, dt, dx, dy);
-      player_update(&player, dt); // Update player with a fixed delta time
+      player_update(&player, dt);
 
       // Update hunger bar position and color
       hunger_rect.y = (WINDOW_HEIGHT - 10) - ((float)player.hunger.hunger_level / player.hunger.max_hunger) * HUNGER_BAR_HEIGHT;
@@ -520,7 +576,7 @@ int main(void)
 
       // draw_hunger_bar(renderer, &hunger_rect, hunger_color);
       draw_world(renderer, &wrld_rect);
-      draw_food(renderer, food, food_count, &wrld_rect);
+      draw_food(renderer, food, food_count, &wrld_rect, forever_time);
       draw_player(renderer, &player, &wrld_rect);
       draw_vertical_bar64(renderer, &reducer_bar_rect, reducer_bar_color, reduction_time_ratio);
       draw_food_count(renderer, food_count, reducer_bar_rect.x + reducer_bar_rect.w + 8, reducer_bar_rect.y, 4);

@@ -59,23 +59,23 @@ void player_update(Player *player, float delta_time)
       }
       else if(hunger_below_threshold(&player->hunger, player->starving_threshold))
       {
-         player->max_speed *= 180.0f;
+         player->max_speed    = 180.0f;
          player->hunger_state = PLAYER_HUNGER_HUNGRY; // Player is Hungry
       }
       else if(!hunger_is_full(&player->hunger))
       {
-         player->max_speed *= 80.0f;
+         player->max_speed    = 80.0f;
          player->hunger_state = PLAYER_HUNGER_STARVING; // Player's hunger is okay
       }
       else
       {
-         player->max_speed *= 50.0f;
+         player->max_speed    = 50.0f;
          player->hunger_state = PLAYER_HUNGER_STARVED; // Player is Starved
       }
 
       if((player->hunger_state == PLAYER_HUNGER_STARVED) || (player->hunger_state == PLAYER_HUNGER_STARVING))
       {
-         
+
          player->starved_time += delta_time; // Record the time when the player started starving
 
          if(player->starved_time >= player->starve_time_threshold)

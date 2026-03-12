@@ -23,6 +23,7 @@ typedef struct
    float    y;        // Y coordinate of the food
    float    size;     // Size of the food item
    uint32_t nutrient; // Amount of nutrients
+   float    freq;     // Oscillation Frequency...
 } Food;
 
 /**
