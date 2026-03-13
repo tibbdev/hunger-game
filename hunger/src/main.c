@@ -557,7 +557,6 @@ int main(void)
    SDL_Color hunger_color = { 255, 255, 0, 255 }; // YELLOW color for hunger bar
    SDL_Color full_color   = { 255, 0, 0, 255 };   // Red color for full hunger
 
-   uint32_t iter      = 0;
    uint32_t frame_cnt = 0;
 
    bool mv_lft = false;
@@ -589,7 +588,29 @@ int main(void)
 
    uint8_t eat_count_colour = 1;
 
-   player.rotation = 0;
+   player.rotation               = 0;
+   bool            gamepad_found = SDL_HasGamepad();
+   int             gp_count      = 0;
+   SDL_JoystickID *ids           = SDL_GetGamepads(&gp_count);
+   SDL_Gamepad    *gamepad       = NULL;
+
+   // Iterate over the list of gamepads
+   for(int i = 0; i < gp_count; i++)
+   {
+      SDL_Gamepad *gamepd = SDL_OpenGamepad(ids[i]);
+      if(gamepad == NULL)
+      {
+         gamepad = gamepd;
+      }
+
+      printf("Gamepad connected: %s\r\n", SDL_GetGamepadName(gamepd));
+
+      // Close the other gamepads
+      if(i > 0)
+      {
+         SDL_CloseGamepad(gamepd);
+      }
+   }
 
    while(running)
    {
@@ -710,6 +731,65 @@ int main(void)
                default:
                   break;
             }
+         }
+
+         if(event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
+         {
+            // printf("Button pressed: %s\r\n", SDL_GetGamepadStringForButton((SDL_GamepadButton)event.gbutton.button));
+            switch((SDL_GamepadButton)event.gbutton.button)
+            {
+               case SDL_GAMEPAD_BUTTON_DPAD_UP:
+                  mv_up = true;
+                  break;
+               case SDL_GAMEPAD_BUTTON_DPAD_DOWN:
+                  mv_dn = true;
+                  break;
+               case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
+                  mv_lft = true;
+                  break;
+               case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
+                  mv_rgt = true;
+                  break;
+
+               case SDL_GAMEPAD_BUTTON_START:
+                  paused = !paused;
+                  break;
+
+               case SDL_GAMEPAD_BUTTON_BACK:
+                  running = false;
+                  break;
+
+               default:
+                  break;
+            }
+         }
+
+         if(event.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
+         {
+            // printf("Button released: %s\r\n", SDL_GetGamepadStringForButton((SDL_GamepadButton)event.gbutton.button));
+            switch((SDL_GamepadButton)event.gbutton.button)
+            {
+               case SDL_GAMEPAD_BUTTON_DPAD_UP:
+                  mv_up = false;
+                  break;
+               case SDL_GAMEPAD_BUTTON_DPAD_DOWN:
+                  mv_dn = false;
+                  break;
+               case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
+                  mv_lft = false;
+                  break;
+               case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
+                  mv_rgt = false;
+                  break;
+
+               default:
+                  break;
+            }
+         }
+
+         if(event.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
+         {
+            // printf("Axis moved: %s - Value := %ld\r\n", SDL_GetGamepadStringForAxis((SDL_GamepadAxis)event.gaxis.axis), event.gaxis.value);
          }
       }
 
