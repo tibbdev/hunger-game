@@ -1,9 +1,9 @@
 /**
- * @file 	main.c
- * @author 	tibbdev
- * @brief 	Hunger Game - A simple SDL3 application to simulate hunger levels.
+ * @file    main.c
+ * @author  tibbdev
+ * @brief   Hunger Game - A simple SDL3 application to simulate hunger levels.
  * @version 0.1
- * @date 	2025-07-30
+ * @date    2025-07-30
  *
  * @copyright Copyright (c) 2025
  *
@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "SDL3/SDL.h"
 #include "SDL3/SDL_surface.h"

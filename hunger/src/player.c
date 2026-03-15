@@ -9,7 +9,7 @@
  *
  */
 #include "player.h"
-
+#include <stddef.h>
 #include <math.h>
 
 void player_init(Player *player, float max_hunger)
