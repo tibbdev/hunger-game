@@ -17,7 +17,7 @@ typedef enum
    PLAYER_IDLE,   // Player is idle
    PLAYER_MOVING, // Player is moving
    PLAYER_DEAD    // Player is dead
-} PlayerState;
+} player_state_e;
 
 typedef enum
 {
@@ -25,7 +25,7 @@ typedef enum
    PLAYER_HUNGER_HUNGRY,   // Player's hunger level is rising
    PLAYER_HUNGER_STARVING, // Player's hunger level is critical
    PLAYER_HUNGER_STARVED   // Player is dead due to hunger
-} PlayerHunger;
+} player_hunger_state_e;
 
 /**
  * @brief Structure to represent a player in the Hunger Game.
@@ -44,8 +44,8 @@ typedef struct
    float        size;                  // Player's size (width and height)
    float        consumption_rate;      // Rate at which the player consumes food
    float        starved_time;          // Time when the player started starving
-   PlayerState  state;                 // Current state of the player
-   PlayerHunger hunger_state;          // Current hunger state of the player
+   player_state_e  state;              // Current state of the player
+   player_hunger_state_e hunger_state; // Current hunger state of the player
    float        hungry_threshold;      // Threshold for hunger state change
    float        starving_threshold;    // Threshold for starving state change
    float        starve_time_threshold; // Threshold for starvation time
@@ -55,14 +55,14 @@ typedef struct
    bool         moving;                // is player moving or not?
 
    Hunger hunger; // Hunger structure to track hunger levels
-} Player;
+} player_t;
 
 /**
  * @brief Initializes a player with default values.
  *
  * @param player Pointer to the Player structure to initialize.
  */
-void player_init(Player *player, float max_hunger);
+void player_init(player_t *player, float max_hunger);
 
 /**
  * @brief Updates the player's position based on input.
@@ -70,7 +70,7 @@ void player_init(Player *player, float max_hunger);
  * @param player Pointer to the Player structure to update.
  * @param delta_time Time since the last update in seconds.
  */
-void player_update(Player *player, float delta_time);
+void player_update(player_t *player, float delta_time);
 
 /**
  * @brief Updates the player's position based on input.
@@ -78,7 +78,7 @@ void player_update(Player *player, float delta_time);
  * @param player Pointer to the Player structure to update.
  * @param nutrition Amount of nutrition gained from the food
  */
-void player_eat(Player *player, float nutrition, uint32_t score_inc);
+void player_eat(player_t *player, float nutrition, uint32_t score_inc);
 
 /**
  * @brief Moves the player by a specified amount in the x and y directions.
@@ -87,7 +87,7 @@ void player_eat(Player *player, float nutrition, uint32_t score_inc);
  * @param dx
  * @param dy
  */
-void player_move(Player *player, float dt, float dx, float dy);
+void player_move(player_t *player, float dt, float dx, float dy);
 
 /**
  * @brief Moves the player to a specified location.
@@ -96,11 +96,11 @@ void player_move(Player *player, float dt, float dx, float dy);
  * @param x
  * @param y
  */
-void player_move_to(Player *player, float x, float y);
+void player_move_to(player_t *player, float x, float y);
 
 /**
  * @brief Displays the player's current state.
  *
  * @param player Pointer to the Player structure to display.
  */
-void player_display(const Player *player);
+void player_display(const player_t *player);

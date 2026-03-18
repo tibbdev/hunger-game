@@ -24,6 +24,8 @@
 #include "player.h"
 #include "food.h"
 #include "collisions.h"
+#include "resources.h"
+#include "physfs.h"
 
 #define FOOD_QUANTITY_MAX               32
 #define FOOD_QUANTITY_MIN               1
@@ -93,7 +95,7 @@ void draw_vertical_bar64(SDL_Renderer *renderer, SDL_FRect *reducer_bar_rect, SD
    SDL_RenderRect(renderer, reducer_bar_rect);
 }
 
-void draw_player(SDL_Renderer *renderer, Player *player, SDL_FRect *wrld_rect, float elapsed_time)
+void draw_player(SDL_Renderer *renderer, player_t *player, SDL_FRect *wrld_rect, float elapsed_time)
 {
    SDL_Color plyr_clr   = { 255, 255, 0, 255 }; // Default color for hunger bar (yellow)
    uint16_t  sprite_row = 0;
@@ -464,10 +466,10 @@ void draw_uint(SDL_Renderer *renderer, uint32_t x, uint32_t y, uint8_t colour, u
    draw_uint_scaled(renderer, x, y, colour, number, 1.0);
 }
 
-void draw_score(SDL_Renderer *renderer, uint8_t colour, Player const *const player)
+void draw_score(SDL_Renderer *renderer, uint8_t colour, player_t const *const player)
 {
    draw_uint_scaled_5dig(renderer, 740, 462, 1, player->score, 1.0f);
-   draw_uint_scaled_3dig(renderer, 764, 496, colour, player->eaten_count, 0.6f);
+   draw_uint_scaled_3dig(renderer, 767, 495, colour, player->eaten_count, 0.55f);
 }
 
 void draw_world(SDL_Renderer *renderer, SDL_FRect *wrld_rect)
@@ -495,7 +497,7 @@ void draw_world(SDL_Renderer *renderer, SDL_FRect *wrld_rect)
    }
 }
 
-int main(void)
+int main(int argc, char ** argv)
 {
    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
 
@@ -521,6 +523,8 @@ int main(void)
 
    SDL_SetRenderScale(renderer, scale, scale);
 
+   init_resources(argv[0]);
+
    bg_tex     = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/background.png"));
    arena_tex  = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/arena.png"));
    text_tex   = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/text.png"));
@@ -534,7 +538,7 @@ int main(void)
    SDL_GetCurrentTime(&current_time);
    srand(current_time % 3600);
 
-   Player player;
+   player_t player;
    player_init(&player, MAX_HUNGER);
    player_move_to(&player, 0.5f * WORLD_WIDTH, 0.5f * WORLD_HEIGHT);
 
@@ -962,6 +966,11 @@ int main(void)
       }
 
       prev_time = current_time;
+
+      if (PHYSFS_isInit())
+      {
+         PHYSFS_deinit();
+      }
    }
    return 0;
 }

@@ -12,7 +12,7 @@
 #include <stddef.h>
 #include <math.h>
 
-void player_init(Player *player, float max_hunger)
+void player_init(player_t *player, float max_hunger)
 {
    if(player == NULL)
    {
@@ -41,7 +41,7 @@ void player_init(Player *player, float max_hunger)
    player->score                 = 0;                                 // Nothing eaten yet
 }
 
-void player_update(Player *player, float delta_time)
+void player_update(player_t *player, float delta_time)
 {
    if(player == NULL)
    {
@@ -56,22 +56,22 @@ void player_update(Player *player, float delta_time)
       // Check hunger state and update player state accordingly
       if(hunger_below_threshold(&player->hunger, player->hungry_threshold))
       {
-         player->hunger_state = PLAYER_HUNGER_OK; // Player is Satisfied
+         player->hunger_state = PLAYER_HUNGER_OK; // player_t is Satisfied
       }
       else if(hunger_below_threshold(&player->hunger, player->starving_threshold))
       {
          player->max_speed    = 150.0f;
-         player->hunger_state = PLAYER_HUNGER_HUNGRY; // Player is Hungry
+         player->hunger_state = PLAYER_HUNGER_HUNGRY; // player_t is Hungry
       }
       else if(!hunger_is_full(&player->hunger))
       {
          player->max_speed    = 80.0f;
-         player->hunger_state = PLAYER_HUNGER_STARVING; // Player's hunger is okay
+         player->hunger_state = PLAYER_HUNGER_STARVING; // player_t's hunger is okay
       }
       else
       {
          player->max_speed    = 50.0f;
-         player->hunger_state = PLAYER_HUNGER_STARVED; // Player is Starved
+         player->hunger_state = PLAYER_HUNGER_STARVED; // player_t is Starved
       }
 
       if((player->hunger_state == PLAYER_HUNGER_STARVED) || (player->hunger_state == PLAYER_HUNGER_STARVING))
@@ -81,7 +81,7 @@ void player_update(Player *player, float delta_time)
 
          if(player->starved_time >= player->starve_time_threshold)
          {
-            player->state = PLAYER_DEAD; // Player is dead due to starvation
+            player->state = PLAYER_DEAD; // player_t is dead due to starvation
          }
       }
       else if(player->starved_time > 0.0f)
@@ -95,7 +95,7 @@ void player_update(Player *player, float delta_time)
    }
 }
 
-void player_eat(Player *player, float nutrition, uint32_t score_inc)
+void player_eat(player_t *player, float nutrition, uint32_t score_inc)
 {
    if(player == NULL)
    {
@@ -107,7 +107,7 @@ void player_eat(Player *player, float nutrition, uint32_t score_inc)
    hunger_eat(&player->hunger, nutrition);
 }
 
-void player_move(Player *player, float dt, float dx, float dy)
+void player_move(player_t *player, float dt, float dx, float dy)
 {
    if(player == NULL)
    {
@@ -184,7 +184,7 @@ void player_move(Player *player, float dt, float dx, float dy)
    }
 }
 
-void player_move_to(Player *player, float x, float y)
+void player_move_to(player_t *player, float x, float y)
 {
    if(player == NULL)
    {
@@ -196,7 +196,7 @@ void player_move_to(Player *player, float x, float y)
 }
 
 #include <stdio.h>
-void player_display(const Player *player)
+void player_display(const player_t *player)
 {
    if(player == NULL)
    {
@@ -204,9 +204,9 @@ void player_display(const Player *player)
    }
 
    // Display player's current state
-   printf("Player Position: (%.2f, %.2f)\n", player->x, player->y);
-   printf("Player State: %d\n", player->state);
-   printf("Player Hunger State: %d\n", player->hunger_state);
+   printf("player_t Position: (%.2f, %.2f)\n", player->x, player->y);
+   printf("player_t State: %d\n", player->state);
+   printf("player_t Hunger State: %d\n", player->hunger_state);
    printf("Current Hunger Level: %.2f / %.2f\n", player->hunger.hunger_level, player->hunger.max_hunger);
    printf("Starved Time: %.2f seconds\n", player->starved_time);
    printf("Hunger Thresholds: Hungry = %.2f, Starving = %.2f\n", player->hungry_threshold, player->starving_threshold);
