@@ -25,9 +25,14 @@ typedef enum
 
 typedef enum
 {
+   HUNGER_GAME_STATE_MainMenu,
    HUNGER_GAME_STATE_Paused,
    HUNGER_GAME_STATE_Playing,
    HUNGER_GAME_STATE_GameOver,
+   HUNGER_GAME_STATE_Help,
+   HUNGER_GAME_STATE_OverlaySettings,
+   HUNGER_GAME_STATE_SettingsMenu,
+   HUNGER_GAME_STATE_Leaderboard,
 
    HUNGER_GAME_STATE_CNT
 } hunger_game_states_enum;
