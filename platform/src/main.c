@@ -26,6 +26,7 @@
 #include "collisions.h"
 #include "resources.h"
 #include "physfs.h"
+#include "../../vendor/sdl_mixer/src/codecs/stb_vorbis/stb_vorbis.h"
 
 #define FOOD_QUANTITY_MAX               32
 #define FOOD_QUANTITY_MIN               1
@@ -50,6 +51,7 @@ SDL_Texture *text_tex   = NULL;
 SDL_Texture *bg_tex     = NULL;
 SDL_Texture *food_tex   = NULL;
 SDL_Texture *player_tex = NULL;
+SDL_Texture *atlas_tex = NULL;
 
 SDL_FRect wrld_rect = { (WINDOW_WIDTH >> 1) - (WORLD_WIDTH >> 1), (WINDOW_HEIGHT >> 1) - (WORLD_HEIGHT >> 1), WORLD_WIDTH, WORLD_HEIGHT };
 
@@ -104,11 +106,14 @@ void draw_player(SDL_Renderer *renderer, player_t *player, SDL_FRect *wrld_rect,
    times = elapsed_time * 5;
    times %= 4;
 
+   float texture_atlas_row_start = 48.0f;
+   float texture_atlas_col_start = 0.0f;
+
    if(player->state == PLAYER_DEAD)
    {
       // If the player is dead, set the hunger bar to Super Dark Red
       plyr_clr         = (SDL_Color) { 69, 7, 9, 255 }; // Super Dark Red for dead state
-      sprite_row       = 3;
+      sprite_row       = 4;
       player->rotation = 360;
 
       times = elapsed_time;
@@ -143,10 +148,10 @@ void draw_player(SDL_Renderer *renderer, player_t *player, SDL_FRect *wrld_rect,
    if(NULL != player_tex)
    {
       SDL_FRect playr_src_rect;
-      playr_src_rect.w = 12;
-      playr_src_rect.h = 12;
-      playr_src_rect.x = (times * 12) % player_tex->w;
-      playr_src_rect.y = sprite_row * playr_src_rect.h * 2 + (playr_src_rect.h * player->moving);
+      playr_src_rect.w = 8;
+      playr_src_rect.h = 8;
+      playr_src_rect.x = texture_atlas_col_start + times * playr_src_rect.w; //+ (times * 12) % ((uint16_t)playr_src_rect.w * 4);
+      playr_src_rect.y = texture_atlas_row_start + sprite_row * playr_src_rect.h * 2 + (playr_src_rect.h * player->moving);
 
       SDL_FRect playr_dest_rect;
       playr_dest_rect.w = 12;
@@ -154,7 +159,7 @@ void draw_player(SDL_Renderer *renderer, player_t *player, SDL_FRect *wrld_rect,
       playr_dest_rect.x = wrld_rect->x + player->x - (playr_dest_rect.w * 0.5f);
       playr_dest_rect.y = wrld_rect->y + player->y - (playr_dest_rect.h * 0.5f);
 
-      SDL_RenderTextureRotated(renderer, player_tex, &playr_src_rect, &playr_dest_rect, -1 * player->rotation, NULL, SDL_FLIP_NONE);
+      SDL_RenderTextureRotated(renderer, atlas_tex, &playr_src_rect, &playr_dest_rect, -1 * player->rotation, NULL, SDL_FLIP_NONE);
    }
    else
    {
@@ -476,17 +481,41 @@ void draw_world(SDL_Renderer *renderer, SDL_FRect *wrld_rect)
 {
    if(NULL != arena_tex)
    {
-      float diff_h = arena_tex->h - wrld_rect->h;
-      float diff_w = arena_tex->w - wrld_rect->w;
+      static SDL_FRect arena_rect = { 0.0f, 32.0f, 480.0f, 480.0f };
+      static SDL_FRect atlas_arena_rect = { 48.0f, 32.0f, 16.0f, 16.0f };
+      static SDL_FRect atlas_arena_wall_rect = { 48.0f, 64.0f, 16.0f, 16.0f };
 
-      static SDL_FRect arena_rect = { 0.0f, 0.0f, 0.0f, 0.0f };
+      arena_rect.h = 480.0f + 32.0f;
+      arena_rect.w = 16.0f;
 
-      arena_rect.h = arena_tex->h;
-      arena_rect.w = arena_tex->w;
-      arena_rect.x = wrld_rect->x - (0.5f * diff_w);
-      arena_rect.y = wrld_rect->y - (0.5f * diff_h);
+      arena_rect.x = wrld_rect->x - 16.0f;
+      arena_rect.y = wrld_rect->y - 16.0f;
 
-      SDL_RenderTexture(renderer, arena_tex, NULL, &arena_rect);
+      SDL_RenderTextureTiled(renderer, atlas_tex, &atlas_arena_wall_rect, 1.0f, &arena_rect);
+
+      arena_rect.x = wrld_rect->x + 480;
+      arena_rect.y = wrld_rect->y - 16.0f;
+
+      SDL_RenderTextureTiled(renderer, atlas_tex, &atlas_arena_wall_rect, 1.0f, &arena_rect);
+
+      arena_rect.h = 16.0f;
+      arena_rect.w = 480.0f;
+      arena_rect.x = wrld_rect->x;
+      arena_rect.y = wrld_rect->y - 16.0f;
+
+      SDL_RenderTextureTiled(renderer, atlas_tex, &atlas_arena_wall_rect, 1.0f, &arena_rect);
+
+      arena_rect.x = wrld_rect->x;
+      arena_rect.y = wrld_rect->y + 480.0f;
+
+      SDL_RenderTextureTiled(renderer, atlas_tex, &atlas_arena_wall_rect, 1.0f, &arena_rect);
+
+      arena_rect.w = 480.0f;
+      arena_rect.h = 480.0f;
+      arena_rect.x = wrld_rect->x;
+      arena_rect.y = wrld_rect->y;
+
+      SDL_RenderTextureTiled(renderer, atlas_tex, &atlas_arena_rect, 1.0f, &arena_rect);
    }
    else
    {
@@ -514,14 +543,31 @@ int main(int argc, char ** argv)
 
    int window_width  = WINDOW_WIDTH;
    int window_height = WINDOW_HEIGHT;
-   SDL_GetWindowSize(window, &window_width, &window_height);
 
+   int window_width_in_tiles = (WINDOW_WIDTH / 16) + 1;
+   int window_height_in_tiles = (WINDOW_HEIGHT / 16) + 1;
+
+   int bg_tile_selection[WINDOW_WIDTH * WINDOW_HEIGHT / (16 * 16)] = {0};
+   int bg_tile_rotation[WINDOW_WIDTH * WINDOW_HEIGHT / (16 * 16)] = {0};
+
+
+   for(uint16_t y = 0; y < window_height_in_tiles; y++)
+   {
+      for(uint16_t x = 0; x < window_width_in_tiles; x++)
+      {
+         bg_tile_selection[x + y*window_width_in_tiles] = rand() % 4;
+         bg_tile_rotation[x + y*window_width_in_tiles] = rand() % 4;
+      }
+   }
+
+   SDL_GetWindowSize(window, &window_width, &window_height);
    float scale_x = (float)window_width / (float)WINDOW_WIDTH;
    float scale_y = (float)window_height / (float)WINDOW_HEIGHT;
 
    float scale = scale_x < scale_y ? scale_x : scale_y;
 
    SDL_SetRenderScale(renderer, scale, scale);
+
 
    init_resources(argv[0]);
 
@@ -530,6 +576,14 @@ int main(int argc, char ** argv)
    text_tex   = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/text.png"));
    player_tex = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/player.png"));
    food_tex   = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/foodfromcts1a.png"));
+   atlas_tex  = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/texture-atlas.png"));
+
+   SDL_SetTextureScaleMode(bg_tex, SDL_SCALEMODE_NEAREST);
+   SDL_SetTextureScaleMode(arena_tex, SDL_SCALEMODE_NEAREST);
+   SDL_SetTextureScaleMode(text_tex, SDL_SCALEMODE_NEAREST);
+   SDL_SetTextureScaleMode(player_tex, SDL_SCALEMODE_NEAREST);
+   SDL_SetTextureScaleMode(food_tex, SDL_SCALEMODE_NEAREST);
+   SDL_SetTextureScaleMode(atlas_tex, SDL_SCALEMODE_NEAREST);
 
    bool      running = true;
    SDL_Event event;
@@ -927,6 +981,32 @@ int main(int argc, char ** argv)
 
       SDL_SetRenderDrawColor(renderer, 0, 55, 55, 255);
       SDL_RenderFillRect(renderer, &wrld_rect);
+
+      for(uint16_t y = 0; y < window_height_in_tiles; y++)
+      {
+         for(uint16_t x = 0; x < window_width_in_tiles; x++)
+         {
+            SDL_FRect bg_rect = {0.0f,0.0f,16.0f,16.0f};
+
+            switch(bg_tile_selection[x + y*window_width_in_tiles])
+            {
+               case 1:
+                  bg_rect.x = 16.0f;
+                  break;
+               case 2:
+                  bg_rect.y = 16.0f;
+                  break;
+               case 3:
+                  bg_rect.x = 16.0f;
+                  bg_rect.y = 16.0f;
+                  break;
+            }
+
+            SDL_FRect bg_dest_rect = {x*16.0f,y*16.0f,16.0f,16.0f};
+
+            SDL_RenderTextureRotated(renderer, atlas_tex, &bg_rect,&bg_dest_rect,bg_tile_rotation[x + y*window_width_in_tiles] * 90.0f,  NULL, SDL_FLIP_NONE);
+         }
+      }
 
       // draw_hunger_bar(renderer, &hunger_rect, hunger_color);
       draw_world(renderer, &wrld_rect);
