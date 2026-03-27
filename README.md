@@ -18,15 +18,20 @@ Try and keep yourself fed or you will die of hunger!
 
 I use VS Code and the CMake extension, builds on windows 10/11 with VS Build Tools 2022.
 
+***UPDATE MAR '26 : Have managed to build with mingw on windows, and using CLion/ Visual Studio 2022 IDEs for those that
+prefer them!***
+
 Have not tested building/running on Linux.
 
 ## Things for future me to do
 
-- Have hunger bar above player
-- Use a level generator instead of the handful of hard coded ones
+- ~~Have hunger bar above player~~
+- Create Assets
+- Add music/ sound effects
+- Play around with some scoring systems
 - Create menus etc.
 - Be able to restart the gameplay bit of the game
 - Leaderboards??
 - Startup at the main menu
-- enscriptenise so that can be pushed to itch.io
-- Add pages so it could launch from here?
+- enscriptenise so that can be played directly on itch.io
+- Add github pages so it could launch from here?
