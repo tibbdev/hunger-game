@@ -49,7 +49,6 @@ const char   *window_title = "Hunger Game";
 SDL_Texture *arena_tex  = NULL;
 SDL_Texture *text_tex   = NULL;
 SDL_Texture *bg_tex     = NULL;
-SDL_Texture *food_tex   = NULL;
 SDL_Texture *player_tex = NULL;
 SDL_Texture *atlas_tex = NULL;
 
@@ -206,51 +205,51 @@ void draw_food(SDL_Renderer *renderer, Food *food, uint8_t food_count, SDL_FRect
       if(NULL != food_tex)
       {
          SDL_FRect food_src_rect;
-         food_src_rect.h  = 34;
-         food_src_rect.w  = 34;
+         food_src_rect.h  = 6.0f;
+         food_src_rect.w  = 6.0f;
          uint8_t food_sel = (uint8_t)roundf(((float)food[i].nutrient / (FOOD_AMOUNT + FOOD_MIN)) * 6.0f);
          // printf("food_sel := %u\r\n", food_sel);
 
          switch(food_sel)
          {
             case 0:
-               food_src_rect.x = 34;
-               food_src_rect.y = 0;
+               food_src_rect.x = 80;
+               food_src_rect.y = 32;
                break;
             case 1:
-               food_src_rect.x = 13 * 34;
-               food_src_rect.y = 0;
+               food_src_rect.x = 86;
+               food_src_rect.y = 32;
                break;
             case 2:
-               food_src_rect.x = 6 * 34;
-               food_src_rect.y = 34;
+               food_src_rect.x = 80;
+               food_src_rect.y = 39;
                break;
             case 3:
-               food_src_rect.x = 0;
-               food_src_rect.y = 3 * 34;
+               food_src_rect.x = 86;
+               food_src_rect.y = 39;
                break;
             case 4:
-               food_src_rect.x = 11 * 34;
-               food_src_rect.y = 3 * 34;
+               food_src_rect.x = 80;
+               food_src_rect.y = 44;
                break;
             case 5:
-               food_src_rect.x = 8 * 34;
-               food_src_rect.y = 7 * 34;
+               food_src_rect.x = 86;
+               food_src_rect.y = 44;
                break;
 
             default:
-               food_src_rect.x = 34;
-               food_src_rect.y = 0;
+               food_src_rect.x = 80;
+               food_src_rect.y = 39;
                break;
          }
 
          SDL_FRect food_dest_rect;
-         food_dest_rect.h = 0.42f * (26 + (2 * food_sel));
-         food_dest_rect.w = 0.42f * (26 + (2 * food_sel));
+         food_dest_rect.h = (4.0f + 0.5f * food_sel);
+         food_dest_rect.w = (4.0f + 0.5f * food_sel);
          food_dest_rect.x = wrld_rect->x + food[i].x - (0.5f * food_dest_rect.w) + 0.2f * sinf((food[i].freq * elapsed_time) + food[i].freq);
          food_dest_rect.y = wrld_rect->y + food[i].y - (0.5f * food_dest_rect.h) + 0.2f * cosf((food[i].freq * elapsed_time) - food[i].freq);
 
-         SDL_RenderTexture(renderer, food_tex, &food_src_rect, &food_dest_rect);
+         SDL_RenderTexture(renderer, atlas_tex, &food_src_rect, &food_dest_rect);
       }
       else
       {
@@ -482,7 +481,7 @@ void draw_world(SDL_Renderer *renderer, SDL_FRect *wrld_rect)
    if(NULL != arena_tex)
    {
       static SDL_FRect arena_rect = { 0.0f, 32.0f, 480.0f, 480.0f };
-      static SDL_FRect atlas_arena_rect = { 48.0f, 32.0f, 16.0f, 16.0f };
+      static SDL_FRect atlas_arena_rect = { 48.0f, 0.0f, 16.0f, 16.0f };
       static SDL_FRect atlas_arena_wall_rect = { 48.0f, 64.0f, 16.0f, 16.0f };
 
       arena_rect.h = 480.0f + 32.0f;
@@ -575,7 +574,6 @@ int main(int argc, char ** argv)
    arena_tex  = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/arena.png"));
    text_tex   = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/text.png"));
    player_tex = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/player.png"));
-   food_tex   = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/foodfromcts1a.png"));
    atlas_tex  = SDL_CreateTextureFromSurface(renderer, SDL_LoadPNG("assets/img/texture-atlas.png"));
 
    SDL_SetTextureScaleMode(bg_tex, SDL_SCALEMODE_NEAREST);
@@ -1008,7 +1006,6 @@ int main(int argc, char ** argv)
          }
       }
 
-      // draw_hunger_bar(renderer, &hunger_rect, hunger_color);
       draw_world(renderer, &wrld_rect);
       draw_food(renderer, food, food_count, &wrld_rect, forever_time);
       draw_player(renderer, &player, &wrld_rect, forever_time);

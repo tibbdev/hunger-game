@@ -4,4 +4,7 @@ out/*
 cmake-build-debug/*
 .DS_Store
 .idea/*
+assets/audio/GameSounds Project/Backup/*
 assets/audio/Backup/*
+*~lock~
+
